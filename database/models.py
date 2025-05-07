@@ -37,6 +37,7 @@ class Task(Base):
         ('completed', 'Выполнено'),
     ]
 
+    id = Column(Integer, primary_key=True)
     creator = Column(Integer, ForeignKey(User.id))
     performer = Column(Integer, ForeignKey(User.id))
     created_at = Column(DateTime, server_default=func.now())

@@ -17,9 +17,9 @@ class UserAdmin(ModelView, model=User):
     can_delete = False
 
 
-class PostAdmin(ModelView, model=Task):
-    name = "Задание"
-    name_plural = "Задания"
+class TaskAdmin(ModelView, model=Task):
+    name = "Задача"
+    name_plural = "Задачи"
     icon = "fa-solid fa-user"
 
     # column_list = [User.id, User.email, User.role]

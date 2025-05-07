@@ -1,15 +1,17 @@
 from .database import Base
-from sqlalchemy import Column, String, Integer, ForeignKey, Text, DateTime
+from sqlalchemy import (Column, String, Integer, ForeignKey, Text, DateTime,
+                        )
+from sqlalchemy.orm import relationship
 from sqlalchemy_utils import ChoiceType
 from sqlalchemy.sql import func
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class User(Base):
-    __tablename__ = 'Пользователи'
+    __tablename__ = 'users'
 
     ROLE_CHOICES = [
-        ('user', 'Пользоватль'),
+        ('user', 'Пользователь'),
         ('admin', 'Админ'),
         ('manager', 'Мэнеджер'),
     ]
@@ -29,7 +31,7 @@ class User(Base):
 
 
 class Task(Base):
-    __tablename__ = 'Задача'
+    __tablename__ = 'tasks'
 
     STATUS_CHOICES = [
         ('open', 'Открыто'),
@@ -38,9 +40,50 @@ class Task(Base):
     ]
 
     id = Column(Integer, primary_key=True)
-    creator = Column(Integer, ForeignKey(User.id))
-    performer = Column(Integer, ForeignKey(User.id))
+    creator = Column(Integer, ForeignKey('users.id'))
+    performer = Column(Integer, ForeignKey('users.id'))
     created_at = Column(DateTime, server_default=func.now())
     description = Column(Text)
     deadline = Column(DateTime)
     status = Column(ChoiceType(STATUS_CHOICES), default='open')
+    assessment = Column(Integer, nullable=True)
+
+    creator_user = relationship(
+        "User", foreign_keys=[creator], backref='created_tasks'
+    )
+    performer_user = relationship(
+        "User", foreign_keys=[performer], backref='assigned_tasks'
+    )
+
+
+class UserTeam(Base):
+    __tablename__ = 'user_teams'
+
+    ROLE_CHOICES = [
+        ('staff', 'Сотрудник'),
+        ('manager', 'Мэнеджер'),
+    ]
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    team_id = Column(Integer, ForeignKey('teams.id'))
+    role = Column(ChoiceType(ROLE_CHOICES), default='staff')
+
+    user = relationship('User', backref='team_links')
+
+
+class Team(Base):
+    __tablename__ = 'teams'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100))
+    user_teams = relationship('UserTeam', backref='team')
+
+
+class Meeting(Base):
+    __tablename__ = 'meeting'
+
+    id = Column(Integer, primary_key=True)
+    description = Column(Text)
+    date = Column(DateTime)
+    user_metting = relationship('User', backref='meeting')

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Профиль пользователя</div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Имя:</dt>
+                    <dd class="col-sm-8">{{ user.name }}</dd>
+
+                    <dt class="col-sm-4">Фамилия:</dt>
+                    <dd class="col-sm-8">{{ user.lastname }}</dd>
+
+                    <dt class="col-sm-4">Email:</dt>
+                    <dd class="col-sm-8">{{ user.email }}</dd>
+
+                    <dt class="col-sm-4">Роль:</dt>
+                    <dd class="col-sm-8">{{ user.role }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

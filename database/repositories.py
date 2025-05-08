@@ -56,7 +56,7 @@ class BaseRepository:
 
 
 class UserRepository(BaseRepository):
-    def __init__(self, model):
+    def __init__(self):
         super().__init__(model=User)
 
     async def is_auth(self, session: AsyncSession, email: str, password: str):
@@ -67,3 +67,24 @@ class UserRepository(BaseRepository):
         if user and user.check_password(password):
             return user
         return False
+
+    async def create_user(self, session: AsyncSession, user_data: dict):
+        result = await session.execute(
+            select(self.model).where(self.model.email == user_data["email"])
+        )
+        existing_user = result.scalars().first()
+        if existing_user:
+            raise ValueError("Пользователь с таким email уже существует")
+
+        user = self.model(
+            name=user_data["name"],
+            lastname=user_data["lastname"],
+            email=user_data["email"],
+            role=user_data.get("role", "user"),
+        )
+        user.set_password(user_data["password"])
+
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+        return user

@@ -10,18 +10,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 class User(Base):
     __tablename__ = 'users'
 
-    ROLE_CHOICES = [
-        ('user', 'Пользователь'),
-        ('admin', 'Админ'),
-        ('manager', 'Мэнеджер'),
-    ]
-
     id = Column(Integer, primary_key=True)
     name = Column(String(20))
     lastname = Column(String(30))
     email = Column(String(100), unique=True, nullable=False)
     password_hash = Column(String(128), nullable=False)
-    role = Column(ChoiceType(ROLE_CHOICES), default='user')
+    role = Column(String(10), default='user')
+
+    meetings = relationship("Meeting", back_populates="user_meeting")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -86,4 +82,10 @@ class Meeting(Base):
     id = Column(Integer, primary_key=True)
     description = Column(Text)
     date = Column(DateTime)
-    user_metting = relationship('User', backref='meeting')
+    user_id = Column(Integer, ForeignKey('users.id'))
+
+    user_meeting = relationship(
+        "User",
+        back_populates="meetings",
+        foreign_keys=[user_id]
+    )

@@ -19,7 +19,7 @@ async def profile_page(
     if not current_user:
         return RedirectResponse("/auth/login")
 
-    return templates.TemplateResponse("profile.html", {
+    return templates.TemplateResponse("user/profile.html", {
         "request": request,
         "user": {
             "name": current_user.name,

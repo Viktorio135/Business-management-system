@@ -2,9 +2,10 @@ from typing import Any, Dict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update as sqlalchemy_update, delete as sqlalchemy_delete
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 
-from .models import User
+from .models import User, Task
 
 
 class BaseRepository:
@@ -88,3 +89,50 @@ class UserRepository(BaseRepository):
         await session.commit()
         await session.refresh(user)
         return user
+
+
+class TaskRepository(BaseRepository):
+    def __init__(self):
+        super().__init__(model=Task)
+
+    async def create_task(self, session: AsyncSession, task_data: dict):
+        performer = await session.execute(
+            select(User).where(
+                User.id == task_data["performer"]
+            )
+        )
+        performer = performer.scalars().first()
+        if not performer:
+            raise ValueError("Такого исполнителя не существует")
+        task = self.model(
+            creator=task_data["creator"].id,
+            performer=performer.id,
+            description=task_data["description"],
+            deadline=task_data["deadline"]
+        )
+        session.add(task)
+        await session.commit()
+        await session.refresh(task)
+
+        return task
+
+    async def get_all_with_users(self, session: AsyncSession):
+        result = await session.execute(
+            select(Task)
+            .options(
+                selectinload(Task.performer_user),
+                selectinload(Task.creator_user)
+            )
+        )
+        return result.scalars().all()
+    
+    async def get_task_with_user(self, session: AsyncSession, task_id: int):
+        result = await session.execute(
+            select(Task)
+            .options(
+                selectinload(Task.performer_user),
+                selectinload(Task.creator_user)
+            )
+            .where(Task.id == task_id)
+        )
+        return result.scalars().first()

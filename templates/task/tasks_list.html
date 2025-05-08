@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Список задач{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="my-4">Список задач</h2>
+    
+    <div class="row">
+        {% for task in tasks %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    Задача #{{ task.id }}
+                    <span class="badge bg-secondary float-end">{{ task.status }}</span>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ task.description|truncate(50) }}</h5>
+                    <p class="card-text">
+                        <h3>{{ task.description }}</h3>
+                        <p>Исполнитель: {{ task.performer_fullname }}</p>
+                        <p>Создатель: {{ task.creator_user.name }} {{ task.creator_user.lastname }}</p>
+                    </p>
+                    <a href="/tasks/{{ task.id }}" class="btn btn-outline-primary">Подробнее</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

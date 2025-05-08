@@ -1,6 +1,9 @@
 from pydantic import (BaseModel, Field, EmailStr, field_validator)
 
 
+from database.models import UserRoleEnum
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -54,7 +57,7 @@ class UserOut(BaseModel):
     name: str
     lastname: str
     email: EmailStr
-    role: str
+    role: UserRoleEnum
 
     class Config:
         orm_mode = True

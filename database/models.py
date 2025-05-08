@@ -1,21 +1,41 @@
+from enum import Enum
 from .database import Base
 from sqlalchemy import (Column, String, Integer, ForeignKey, Text, DateTime,
                         )
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils import ChoiceType
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.sql import func
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
+class UserRoleEnum(str, Enum):
+    user = "user"
+    admin = "admin"
+    manager = "manager"
+
+
+ROLE_CHOICES = [(role.value, role.name) for role in UserRoleEnum]
+
+
 class User(Base):
     __tablename__ = 'users'
+
+    ROLE_CHOICES = [
+        ('user', 'Пользователь'),
+        ('admin', 'Админ'),
+        ('manager', 'Мэнеджер'),
+    ]
 
     id = Column(Integer, primary_key=True)
     name = Column(String(20))
     lastname = Column(String(30))
     email = Column(String(100), unique=True, nullable=False)
     password_hash = Column(String(128), nullable=False)
-    role = Column(String(10), default='user')
+    role = Column(
+        ChoiceType(ROLE_CHOICES, impl=String(8)),
+        default=UserRoleEnum.user.value
+    )
 
     meetings = relationship("Meeting", back_populates="user_meeting")
 
@@ -24,6 +44,10 @@ class User(Base):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    @property
+    def role_name(self):
+        return dict(self.ROLE_CHOICES).get(self.role.code, 'Неизвестно')
 
 
 class Task(Base):
@@ -43,6 +67,12 @@ class Task(Base):
     deadline = Column(DateTime)
     status = Column(ChoiceType(STATUS_CHOICES), default='open')
     assessment = Column(Integer, nullable=True)
+
+    @hybrid_property
+    def performer_fullname(self):
+        if self.performer_user:
+            return f"{self.performer_user.name} {self.performer_user.lastname}"
+        return "Не назначен"
 
     creator_user = relationship(
         "User", foreign_keys=[creator], backref='created_tasks'

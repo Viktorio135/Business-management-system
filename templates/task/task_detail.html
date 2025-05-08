@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Задача #{{ task.id }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card my-4">
+        <div class="card-header">
+            <h2>Задача #{{ task.id }}</h2>
+            <span class="badge bg-{{ 'success' if task.status == 'completed' else 'warning' }}">
+                {{ task.status }}
+            </span>
+        </div>
+        
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <h5>Создатель:</h5>
+                    <p>Пользователь #{{ task.creator }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Исполнитель:</h5>
+                    <p>Пользователь #{{ task.performer }}</p>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <h5>Дата создания:</h5>
+                    <p>{{ task.created_at }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Срок выполнения:</h5>
+                    <p>{{ task.deadline }}</p>
+                </div>
+            </div>
+            
+            <h5>Подробное описание:</h5>
+            <div class="border p-3 mb-3">
+                {{ task.description }}
+            </div>
+            
+            {% if user.role in ['admin', 'manager'] %}
+            <div class="btn-group">
+                <a href="/tasks/{{ task.id }}/edit" class="btn btn-warning">Редактировать</a>
+                <form method="post" action="/tasks/{{ task.id }}/delete">
+                    <button type="submit" class="btn btn-danger ms-2">Удалить</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

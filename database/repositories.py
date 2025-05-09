@@ -154,3 +154,14 @@ class TaskRepository(BaseRepository):
         await session.commit()
         await session.refresh(task)
         return task
+
+    async def update_assessment(self, session: AsyncSession,
+                                task_id: int, assessment: int):
+        task = await self.get(session, task_id)
+        if not task:
+            raise ValueError("Такого задания не существует")
+        task.assessment = assessment
+        session.add(task)
+        await session.commit()
+        await session.refresh(task)
+        return task

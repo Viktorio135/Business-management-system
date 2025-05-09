@@ -12,7 +12,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 class UserRoleEnum(str, Enum):
     user = "user"
     admin = "admin"
-    manager = "manager"
 
 
 ROLE_CHOICES = [(role.value, role.name) for role in UserRoleEnum]
@@ -23,8 +22,7 @@ class User(Base):
 
     ROLE_CHOICES = [
         ('user', 'Пользователь'),
-        ('admin', 'Админ'),
-        ('manager', 'Мэнеджер'),
+        ('admin', 'Админ')
     ]
 
     id = Column(Integer, primary_key=True)

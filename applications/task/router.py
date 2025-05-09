@@ -1,6 +1,6 @@
 import datetime
 
-from fastapi import APIRouter, Form, Request, Depends, status
+from fastapi import APIRouter, Form, Query, Request, Depends, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.exceptions import HTTPException
 from fastapi.templating import Jinja2Templates
@@ -51,7 +51,7 @@ async def create_task_page(request: Request, error: str = None,
         return RedirectResponse(
             "/auth/login", status_code=status.HTTP_303_SEE_OTHER
         )
-    if current_user.role not in ['admin', 'manager']:
+    if current_user.role not in ['admin']:
         return HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     users = await user_repo.get_all(session)
@@ -81,7 +81,7 @@ async def create_router(
     current_user: User = Depends(get_current_user)
 ):
 
-    if current_user.role not in ['admin', 'manager']:
+    if current_user.role not in ['admin']:
         return HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     try:
@@ -122,11 +122,18 @@ async def task_detail_page(
     task_repo: TaskRepository = Depends(get_task_repo),
     current_user: User = Depends(get_current_user)
 ):
+    if not current_user:
+        return RedirectResponse(
+            "/auth/login", status_code=status.HTTP_303_SEE_OTHER
+        )
 
     task = await task_repo.get_user_tasks(session, task_id, current_user.id)
 
-    if not task:
+    if current_user.id not in (task.creator, task.performer):
         return HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+    if not task:
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     return templates.TemplateResponse("task/task_detail.html", {
         "request": request,
@@ -152,13 +159,52 @@ async def change_status(
         return RedirectResponse(
             "/auth/login", status_code=status.HTTP_303_SEE_OTHER
         )
-    if current_user.role not in ['admin', 'manager']:
-        raise HTTPException(status_code=403, detail="Forbidden")
 
     await task_repo.update_status(
         session, task_id, task_status
     )
     return RedirectResponse(
         f'/tasks/{task_id}',
+        status_code=status.HTTP_303_SEE_OTHER
+    )
+
+
+@router.get('/{task_id}/change_assessment')
+async def change_assessment(
+    task_id: int, assessment: int = Query(ge=1, le=5),
+    session: AsyncSession = Depends(get_db),
+    task_repo: TaskRepository = Depends(get_task_repo),
+    current_user: User = Depends(get_current_user)
+):
+    if not current_user:
+        return RedirectResponse(
+            "/auth/login", status_code=status.HTTP_303_SEE_OTHER
+        )
+    await task_repo.update_assessment(
+        session, task_id, assessment
+    )
+    return RedirectResponse(
+        f'/tasks/{task_id}',
+        status_code=status.HTTP_303_SEE_OTHER
+    )
+
+
+@router.post('/{task_id}/delete')
+async def delete_task(
+    task_id: int,
+    session: AsyncSession = Depends(get_db),
+    task_repo: TaskRepository = Depends(get_task_repo),
+    current_user: User = Depends(get_current_user)
+):
+    if not current_user:
+        return RedirectResponse(
+            "/auth/login", status_code=status.HTTP_303_SEE_OTHER
+        )
+    task = await task_repo.delete(session, task_id)
+    if task and (task.creator == current_user.id):
+        await task_repo.delete(session, task_id)
+
+    return RedirectResponse(
+        '/tasks',
         status_code=status.HTTP_303_SEE_OTHER
     )

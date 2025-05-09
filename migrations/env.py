@@ -64,11 +64,21 @@ def run_migrations_online() -> None:
     asyncio.run(run_async_migrations())
 
 
+def include_object(object, name, type_, reflected, compare_to):
+    """Игнорировать системные таблицы SQLite"""
+    if type_ == "table" and name.startswith("sqlite_"):
+        return False
+    return True
+
+
 def do_run_migrations(connection):
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
-        compare_type=True,
+        compare_type=True,             # Сравнивать типы данных столбцов
+        compare_server_default=True,   # Сравнивать значения по умолчанию
+        render_as_batch=True,          # Для SQLite совместимости
+        include_object=include_object  # Добавить фильтр таблиц (см. шаг 3)
     )
     with context.begin_transaction():
         context.run_migrations()

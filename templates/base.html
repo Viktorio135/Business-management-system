@@ -29,10 +29,10 @@
             <a class="navbar-brand" href="/">Мое приложение</a>
             <div class="navbar-nav">
                 {% if user %}
-                    {% if user.role == 'admin' or user.role == 'manager' %}
+                    {% if user.role == 'admin' %}
                     <a class="nav-link" href="/tasks/create">Создать задание</a>
-                    <a class="nav-link" href="/tasks">Список заданий</a>
                     {% endif %}
+                    <a class="nav-link" href="/tasks">Список заданий</a>
                     <a class="nav-link" href="/users/profile">Профиль</a>
                     <a class="nav-link" href="/auth/logout">Выйти</a>
                 {% else %}

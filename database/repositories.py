@@ -116,23 +116,41 @@ class TaskRepository(BaseRepository):
 
         return task
 
-    async def get_all_with_users(self, session: AsyncSession):
+    async def get_all_user_tasks(self, session: AsyncSession, user_id: int):
         result = await session.execute(
             select(Task)
             .options(
                 selectinload(Task.performer_user),
                 selectinload(Task.creator_user)
+            )
+            .where(
+                (Task.creator == user_id) | (Task.performer == user_id)
             )
         )
         return result.scalars().all()
-    
-    async def get_task_with_user(self, session: AsyncSession, task_id: int):
+
+    async def get_user_tasks(self, session: AsyncSession,
+                             task_id: int, user_id: int):
         result = await session.execute(
             select(Task)
             .options(
                 selectinload(Task.performer_user),
                 selectinload(Task.creator_user)
             )
-            .where(Task.id == task_id)
+            .where(
+                (Task.id == task_id) &
+                ((Task.creator == user_id) | (Task.performer == user_id))
+            )
         )
         return result.scalars().first()
+
+    async def update_status(self, session: AsyncSession,
+                            task_id: int, task_status: str):
+        task = await self.get(session, task_id)
+        if not task:
+            raise ValueError("Такого задания не существует")
+        task.status = task_status
+        session.add(task)
+        await session.commit()
+        await session.refresh(task)
+        return task

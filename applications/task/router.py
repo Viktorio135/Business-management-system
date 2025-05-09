@@ -26,10 +26,8 @@ async def tasks_list_page(
 ):
     if not current_user:
         return RedirectResponse("/auth/login")
-    if current_user.role not in ['admin', 'manager']:
-        return HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-    tasks = await task_repo.get_all_with_users(session)
+    tasks = await task_repo.get_all_user_tasks(session, current_user.id)
 
     return templates.TemplateResponse("task/tasks_list.html", {
         "request": request,
@@ -41,29 +39,6 @@ async def tasks_list_page(
         },
         "tasks": tasks
 
-    })
-
-
-@router.get('/{task_id}')
-async def task_detail_page(
-    task_id: int,
-    request: Request,
-    session: AsyncSession = Depends(get_db),
-    task_repo: TaskRepository = Depends(get_task_repo),
-    current_user: User = Depends(get_current_user)
-):
-
-    task = await task_repo.get_task_with_user(session, task_id)
-
-    return templates.TemplateResponse("task/task_detail.html", {
-        "request": request,
-        "user": {
-            "name": current_user.name,
-            "lastname": current_user.lastname,
-            "email": current_user.email,
-            "role": current_user.role
-        },
-        "task": task
     })
 
 
@@ -135,5 +110,55 @@ async def create_router(
         )
     return RedirectResponse(
         "/tasks",
+        status_code=status.HTTP_303_SEE_OTHER
+    )
+
+
+@router.get('/{task_id}')
+async def task_detail_page(
+    task_id: int,
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+    task_repo: TaskRepository = Depends(get_task_repo),
+    current_user: User = Depends(get_current_user)
+):
+
+    task = await task_repo.get_user_tasks(session, task_id, current_user.id)
+
+    if not task:
+        return HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+    return templates.TemplateResponse("task/task_detail.html", {
+        "request": request,
+        "user": {
+            "name": current_user.name,
+            "lastname": current_user.lastname,
+            "email": current_user.email,
+            "role": current_user.role
+        },
+        "task": task
+    })
+
+
+@router.get('/{task_id}/change_status')
+async def change_status(
+    task_id: int,
+    task_status: str,
+    session: AsyncSession = Depends(get_db),
+    task_repo: TaskRepository = Depends(get_task_repo),
+    current_user: User = Depends(get_current_user)
+):
+    if not current_user:
+        return RedirectResponse(
+            "/auth/login", status_code=status.HTTP_303_SEE_OTHER
+        )
+    if current_user.role not in ['admin', 'manager']:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    await task_repo.update_status(
+        session, task_id, task_status
+    )
+    return RedirectResponse(
+        f'/tasks/{task_id}',
         status_code=status.HTTP_303_SEE_OTHER
     )

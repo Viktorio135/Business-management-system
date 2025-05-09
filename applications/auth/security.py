@@ -10,7 +10,7 @@ from dependencies import get_user_repo
 
 SECRET_KEY = "your-secret-key"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 360
 
 
 def create_access_token(data: dict, expires_delta: timedelta):

@@ -3,24 +3,61 @@
 {% block title %}Задача #{{ task.id }}{% endblock %}
 
 {% block content %}
+{% set status_names = {
+    'open': 'Открыто',
+    'in_work': 'В работе',
+    'completed': 'Завершено'
+} %}
 <div class="container">
     <div class="card my-4">
         <div class="card-header">
             <h2>Задача #{{ task.id }}</h2>
-            <span class="badge bg-{{ 'success' if task.status == 'completed' else 'warning' }}">
-                {{ task.status }}
-            </span>
-        </div>
+            <div class="d-flex align-items-center gap-2 mt-2">
+                <span class="badge bg-{{ 'success' if task.status == 'completed' else 'warning' }}">
+                    {{ status_names[task.status] }}
+                </span>
+                {% if user.role in ['admin', 'manager'] %}
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                            type="button" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false">
+                        Изменить статус
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" 
+                            href="/tasks/{{ task.id }}/change_status?task_status=open">
+                            Открыто
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" 
+                            href="/tasks/{{ task.id }}/change_status?task_status=in_work">
+                            В работе
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" 
+                            href="/tasks/{{ task.id }}/change_status?task_status=completed">
+                            Завершено
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div> <!-- Закрываем card-header здесь -->
         
         <div class="card-body">
             <div class="row mb-3">
                 <div class="col-md-6">
                     <h5>Создатель:</h5>
-                    <p>Пользователь #{{ task.creator }}</p>
+                    <p>{{ task.creator_user.name }} {{ task.creator_user.lastname }}</p>
                 </div>
                 <div class="col-md-6">
                     <h5>Исполнитель:</h5>
-                    <p>Пользователь #{{ task.performer }}</p>
+                    <p>{{ task.performer_fullname }}</p>
                 </div>
             </div>
             

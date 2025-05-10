@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Управление участниками команды{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Управление участниками: {{ team.name }}</h2>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <h4>Добавить участника</h4>
+            <form method="post" action="{{ url_for('add_member', team_id=team.id) }}">
+                <div class="mb-3">
+                    <select class="form-select" name="user_id" required>
+                        <option value="">Выберите пользователя</option>
+                        {% for user in available_users %}
+                        <option value="{{ user.id }}">{{ user.name }} {{ user.lastname }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <select class="form-select" name="role" required>
+                        <option value="staff">Сотрудник</option>
+                        <option value="manager">Менеджер</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Добавить</button>
+            </form>
+        </div>
+        
+        <div class="col-md-6">
+            <h4>Текущие участники</h4>
+            <div class="list-group">
+                {% for member in team.user_teams %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ member.user.name }} {{ member.user.lastname }}
+                    <span class="badge bg-{{ 'success' if member.role == 'manager' else 'secondary' }}">
+                        {{ member.get_role_display() }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,6 +1,6 @@
 from sqladmin import Admin
 from sqlalchemy.ext.asyncio import AsyncEngine
-from .views import UserAdmin, TaskAdmin  # Импорт View-классов
+from .views import UserAdmin, TaskAdmin, TeamAdmin
 
 
 def setup_admin(app, engine: AsyncEngine):
@@ -14,5 +14,6 @@ def setup_admin(app, engine: AsyncEngine):
 
     admin.add_view(UserAdmin)
     admin.add_view(TaskAdmin)
+    admin.add_view(TeamAdmin)
 
     return admin

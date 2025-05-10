@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 
-from .models import TaskChat, User, Task
+from .models import TaskChat, User, Task, Team
 
 
 class BaseRepository:
@@ -189,3 +189,8 @@ class TaskRepository(BaseRepository):
 class TaskChatRepository(BaseRepository):
     def __init__(self):
         super().__init__(model=TaskChat)
+
+
+class TeamRepository(BaseRepository):
+    def __init__(self):
+        super().__init__(Team)

@@ -70,7 +70,7 @@ async def create_task_page(request: Request, error: str = None,
 
 
 @router.post('/create')
-async def create_router(
+async def create_task(
     request: Request,
     user_repo: UserRepository = Depends(get_user_repo),
     performer: int = Form(...),
@@ -200,7 +200,7 @@ async def delete_task(
         return RedirectResponse(
             "/auth/login", status_code=status.HTTP_303_SEE_OTHER
         )
-    task = await task_repo.delete(session, task_id)
+    task = await task_repo.get(session, task_id)
     if task and (task.creator == current_user.id):
         await task_repo.delete(session, task_id)
 
@@ -208,3 +208,78 @@ async def delete_task(
         '/tasks',
         status_code=status.HTTP_303_SEE_OTHER
     )
+
+
+@router.get('/{task_id}/edit')
+async def edit_task_page(
+    request: Request,
+    task_id:  int,
+    session: AsyncSession = Depends(get_db),
+    task_repo: TaskRepository = Depends(get_task_repo),
+    user_repo: UserRepository = Depends(get_user_repo),
+    current_user: User = Depends(get_current_user)
+):
+    if not current_user:
+        return RedirectResponse(
+            "/auth/login", status_code=status.HTTP_303_SEE_OTHER
+        )
+    task = await task_repo.get(session, task_id)
+    if task and (task.creator == current_user.id):
+        users = await user_repo.get_all(session)
+        return templates.TemplateResponse("task/edit_task.html", {
+            "request": request,
+            "user": {
+                "name": current_user.name,
+                "lastname": current_user.lastname,
+                "email": current_user.email,
+                "role": current_user.role
+            },
+            "task": task,
+            "status_choices": [
+                ('open', 'Открыто'),
+                ('in_work', 'В работе'),
+                ('completed', 'Завершено')
+            ],
+            "users": users
+        })
+    return HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+
+@router.post('/{task_id}/edit')
+async def edit_task(
+    request: Request,
+    task_id: int,
+    description: str = Form(...),
+    status: str = Form(...),
+    performer: int = Form(...),
+    deadline: datetime.datetime = Form(...),
+    assessment: int = Form(...),
+    session: AsyncSession = Depends(get_db),
+    task_repo: TaskRepository = Depends(get_task_repo),
+    current_user: User = Depends(get_current_user)
+):
+    if not current_user:
+        return RedirectResponse(
+            "/auth/login", status_code=status.HTTP_303_SEE_OTHER
+        )
+    task = await task_repo.get(session, task_id)
+    if task and (task.creator == current_user.id):
+        try:
+            await task_repo.update(
+                session, task_id, {
+                    "description": description,
+                    "status": status,
+                    "performer": performer,
+                    "deadline": deadline,
+                    "assessment": assessment
+                }
+            )
+            return RedirectResponse(
+                f'/tasks/{task_id}',
+                status_code=303
+            )
+        except Exception as e:
+            return HTTPException(
+                status_code=400,
+                detail=str(e)
+            )

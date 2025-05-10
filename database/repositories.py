@@ -41,7 +41,7 @@ class BaseRepository:
             .values(**obj_in)
         )
         await session.commit()
-        return await self.get(session, id)
+        return True
 
     async def delete(self, session: AsyncSession, id: int):
         await session.execute(

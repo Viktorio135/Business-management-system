@@ -78,6 +78,30 @@ class Task(Base):
     performer_user = relationship(
         "User", foreign_keys=[performer], backref='assigned_tasks'
     )
+    created_tasks = relationship(
+        "TaskChat",
+        back_populates="task",
+        cascade="all, delete-orphan"
+    )
+
+
+class TaskChat(Base):
+    __tablename__ = 'task_chat'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    task_id = Column(Integer, ForeignKey('tasks.id'))
+    text = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+
+    user = relationship(
+        "User", foreign_keys=[user_id], backref='created_chats'
+    )
+    task = relationship(
+        "Task",
+        foreign_keys=[task_id],
+        back_populates="created_tasks"
+    )
 
 
 class UserTeam(Base):

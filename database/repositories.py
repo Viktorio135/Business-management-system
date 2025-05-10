@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 
-from .models import User, Task
+from .models import TaskChat, User, Task
 
 
 class BaseRepository:
@@ -135,7 +135,8 @@ class TaskRepository(BaseRepository):
             select(Task)
             .options(
                 selectinload(Task.performer_user),
-                selectinload(Task.creator_user)
+                selectinload(Task.creator_user),
+                selectinload(Task.created_tasks).joinedload(TaskChat.user)
             )
             .where(
                 (Task.id == task_id) &
@@ -165,3 +166,8 @@ class TaskRepository(BaseRepository):
         await session.commit()
         await session.refresh(task)
         return task
+
+
+class TaskChatRepository(BaseRepository):
+    def __init__(self):
+        super().__init__(model=TaskChat)

@@ -117,5 +117,55 @@
             {% endif %}
         </div>
     </div>
+    <div class="card my-4">
+        <div class="card-header">
+            <h4>Комментарии к задаче</h4>
+        </div>
+        <div class="card-body">
+            <!-- Список комментариев -->
+            <div class="chat-messages mb-4" style="max-height: 400px; overflow-y: auto;">
+                {% for comment in task.created_tasks %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="fw-bold">
+                            {{ comment.user.name }} {{ comment.user.lastname }}
+                            {% if comment.user_id == task.creator_user_id %}
+                            <span class="badge bg-primary">Создатель</span>
+                            {% elif comment.user_id == task.performer_id %}
+                            <span class="badge bg-success">Исполнитель</span>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">{{ comment.created_at }}</small>
+                    </div>
+                    <div class="mt-1 p-2 bg-light rounded">
+                        {{ comment.text }}
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-muted">Пока нет комментариев</div>
+                {% endfor %}
+            </div>
+
+            <!-- Форма добавления комментария -->
+            {% if user.id in [task.creator_user_id, task.performer_id] %}
+            <form method="POST" action="{{ url_for('add_comment', task_id=task.id) }}">
+                <div class="mb-3">
+                    <textarea name="message" class="form-control" 
+                              rows="3" placeholder="Напишите комментарий..." 
+                              required></textarea>
+                </div>
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary">
+                        Отправить
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <div class="alert alert-info">
+                Только создатель и исполнитель могут оставлять комментарии
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}

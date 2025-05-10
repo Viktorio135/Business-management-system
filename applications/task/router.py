@@ -7,9 +7,10 @@ from fastapi.templating import Jinja2Templates
 
 
 from database.database import AsyncSession, get_db
-from database.repositories import TaskRepository, UserRepository
+from database.repositories import (TaskRepository, UserRepository,
+                                   TaskChatRepository)
 from database.models import User
-from dependencies import get_task_repo, get_user_repo
+from dependencies import get_task_repo, get_user_repo, get_taskchat_repo
 from applications.auth.security import get_current_user
 
 
@@ -283,3 +284,39 @@ async def edit_task(
                 status_code=400,
                 detail=str(e)
             )
+
+
+@router.post('/{task_id}/add_comment')
+async def add_comment(
+    task_id: int,
+    message: str = Form(...),
+    session: AsyncSession = Depends(get_db),
+    taskchat_repo: TaskChatRepository = Depends(get_taskchat_repo),
+    task_repo: TaskRepository = Depends(get_task_repo),
+    current_user: User = Depends(get_current_user)
+):
+    if not current_user:
+        return RedirectResponse(
+            "/auth/login", status_code=status.HTTP_303_SEE_OTHER
+        )
+    task = await task_repo.get(session, task_id)
+    if task and (task.creator == current_user.id or
+                 task.performer == current_user.id):
+        try:
+            await taskchat_repo.add(session, {
+                "user_id": current_user.id,
+                "task_id": task_id,
+                "text": message
+            })
+            return RedirectResponse(
+                    f'/tasks/{task_id}',
+                    status_code=status.HTTP_303_SEE_OTHER
+                )
+        except Exception as e:
+            return HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
+    return HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN
+    )

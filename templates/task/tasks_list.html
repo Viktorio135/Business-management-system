@@ -5,6 +5,7 @@
 {% block content %}
 <div class="container">
     <h2 class="my-4">Список задач</h2>
+    {% if avg and user.role != "admin" %}<h2 class="my-4">Средняя оценка: {{ avg }}</h2>{% endif %}
     
     <div class="row">
         {% for task in tasks %}
@@ -20,6 +21,7 @@
                         <h3>{{ task.description }}</h3>
                         <p>Исполнитель: {{ task.performer_fullname }}</p>
                         <p>Создатель: {{ task.creator_user.name }} {{ task.creator_user.lastname }}</p>
+                        {% if task.assessment %}<p>Оценка: {{ task.assessment }}{% endif %}</p>
                     </p>
                     <a href="/tasks/{{ task.id }}" class="btn btn-outline-primary">Подробнее</a>
                 </div>

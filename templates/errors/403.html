@@ -1,0 +1,12 @@
+{% extends "base_errors.html" %}
+
+{% block title %}403 - Доступ запрещен{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <h1 class="display-1 text-danger">403</h1>
+    <h2 class="mb-4">Доступ запрещен</h2>
+    <p>У вас недостаточно прав для просмотра этой страницы</p>
+    <a href="/users/profile" class="btn btn-primary">На главную</a>
+</div>
+{% endblock %}

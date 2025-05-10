@@ -1,6 +1,7 @@
 from typing import Any, Dict
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import update as sqlalchemy_update, delete as sqlalchemy_delete
+from sqlalchemy import (func, update as sqlalchemy_update,
+                        delete as sqlalchemy_delete)
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
@@ -117,17 +118,34 @@ class TaskRepository(BaseRepository):
         return task
 
     async def get_all_user_tasks(self, session: AsyncSession, user_id: int):
-        result = await session.execute(
-            select(Task)
+        avg_assessment = func.avg(
+            Task.assessment
+        ).filter(
+            Task.assessment.is_not(None)
+        ).over().label("average_assessment")
+
+        stmt = (
+            select(Task, avg_assessment)
             .options(
                 selectinload(Task.performer_user),
                 selectinload(Task.creator_user)
             )
-            .where(
-                (Task.creator == user_id) | (Task.performer == user_id)
-            )
+            .where((Task.creator == user_id) | (Task.performer == user_id))
         )
-        return result.scalars().all()
+
+        result = await session.execute(stmt)
+
+        rows = result.all()
+
+        tasks = [row[0] for row in rows]
+        average_assessment = (
+            round(rows[0][1], 2)if rows and rows[0][1] is not None else None
+        )
+
+        return {
+            "tasks": tasks,
+            "avg": average_assessment
+        }
 
     async def get_user_tasks(self, session: AsyncSession,
                              task_id: int, user_id: int):

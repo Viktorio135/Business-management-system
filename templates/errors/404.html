@@ -1,0 +1,12 @@
+{% extends "base_errors.html" %}
+
+{% block title %}404 - Страница не найдена{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <h1 class="display-1 text-danger">404</h1>
+    <h2 class="mb-4">Страница не найдена</h2>
+    <p>Запрошенная страница не существует или была перемещена</p>
+    <a href="/users/profile" class="btn btn-primary">На главную</a>
+</div>
+{% endblock %}

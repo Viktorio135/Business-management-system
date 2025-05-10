@@ -12,11 +12,20 @@
         <div class="list-group-item d-flex justify-content-between align-items-center">
             <div>
                 <h5>{{ team.name }}</h5>
-                <small>Участников: </small>
             </div>
             <div>
-                <a href="/teams/{{ team.id }}" class="btn btn-sm btn-info">Подробнее</a>
-                <a href="" class="btn btn-sm btn-warning">Редактировать</a>
+                <a href="/teams/{{ team.id }}" 
+                class="btn btn-sm btn-outline-primary me-2">Подробнее</a>
+
+                <a href="/teams/{{ team.id }}/edit" 
+                class="btn btn-sm btn-outline-warning me-2">Редактировать</a>
+
+                <form method="post" 
+                    action="{{ url_for('delete_team', team_id=team.id) }}" 
+                    class="d-inline">
+                    <button type="submit" 
+                            class="btn btn-sm btn-outline-danger">Удалить</button>
+                </form>
             </div>
         </div>
         {% else %}

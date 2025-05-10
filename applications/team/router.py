@@ -134,3 +134,23 @@ async def delete_team_member(
         f'/teams/{team_id}',
         status_code=status.HTTP_303_SEE_OTHER
     )
+
+
+@router.post('/{team_id}/delete')
+async def delete_team(
+    team_id: int,
+    current_user: User = Depends(get_current_user(admin=True)),
+    session: AsyncSession = Depends(get_db),
+    team_repo: TeamRepository = Depends(get_team_repo)
+):
+    try:
+        await team_repo.delete(session, team_id)
+    except Exception as e:
+        return HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    return RedirectResponse(
+        '/teams',
+        status_code=status.HTTP_303_SEE_OTHER
+    )

@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import (func, update as sqlalchemy_update,
                         delete as sqlalchemy_delete)
@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 
-from .models import TaskChat, User, Task, Team
+from .models import TaskChat, User, Task, Team, UserTeam
 
 
 class BaseRepository:
@@ -194,3 +194,50 @@ class TaskChatRepository(BaseRepository):
 class TeamRepository(BaseRepository):
     def __init__(self):
         super().__init__(Team)
+
+    async def add(self, session: AsyncSession,
+                  name: str, members: Optional[int] = None):
+        team = Team(name=name)
+        session.add(team)
+        await session.flush()
+        if members:
+            for member in members:
+                userteam = UserTeam(
+                    user_id=member,
+                    team_id=team.id,
+                    role='staff'
+                )
+                session.add(userteam)
+        await session.commit()
+        return team
+
+    async def get(self, session: AsyncSession, team_id: int):
+        result = await session.execute(
+            select(Team)
+            .options(
+                selectinload(Team.user_teams).selectinload(UserTeam.user)
+            )
+            .where(Team.id == team_id)
+        )
+        return result.scalars().first()
+
+    async def add_member(self, session: AsyncSession,
+                         team_id: int, user_id: int, role: str):
+        userteam = UserTeam(
+            user_id=user_id,
+            team_id=team_id,
+            role=role
+        )
+        session.add(userteam)
+        await session.commit()
+        session.flush()
+        return userteam
+
+    async def delete_member(self, session: AsyncSession,
+                            team_id: int, user_id: int):
+        await session.execute(
+            sqlalchemy_delete(UserTeam).where(
+                (UserTeam.team_id == team_id) & (UserTeam.user_id == user_id)
+            )
+        )
+        await session.commit()

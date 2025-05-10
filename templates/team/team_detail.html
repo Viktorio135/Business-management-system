@@ -6,9 +6,55 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>{{ team.name }}</h2>
-        <a href="{{ url_for('manage_team_members', team_id=team.id) }}" class="btn btn-primary">Управление участниками</a>
+        <a href="{{ url_for('team_list_page') }}" class="btn btn-outline-secondary">← Назад к списку</a>
     </div>
 
+    <!-- Форма добавления участников -->
+    <div class="card mb-4">
+        <div class="card-header">Добавить участника</div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('add_team_member', team_id=team.id) }}">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <select class="form-select" name="user_id" required>
+                            <option value="">Выберите сотрудника</option>
+                            {% for user in available_users %}
+                            <option value="{{ user.id }}">
+                                {{ user.name }} {{ user.lastname }} ({{ user.email }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="btn-group" role="group">
+                            <input type="radio" 
+                                   class="btn-check" 
+                                   name="role" 
+                                   id="roleStaff" 
+                                   value="staff" 
+                                   checked>
+                            <label class="btn btn-outline-secondary" for="roleStaff">Сотрудник</label>
+
+                            <input type="radio" 
+                                   class="btn-check" 
+                                   name="role" 
+                                   id="roleManager" 
+                                   value="manager">
+                            <label class="btn btn-outline-secondary" for="roleManager">Менеджер</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Добавить</button>
+                    </div>
+                </div>
+            </form>
+            {% if error %}
+            <div class="alert alert-danger mt-3 mb-0">{{ error }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Список участников -->
     <h4 class="mb-3">Участники команды</h4>
     <div class="list-group">
         {% for member in team.user_teams %}
@@ -16,12 +62,14 @@
             <div>
                 {{ member.user.name }} {{ member.user.lastname }}
                 <span class="badge bg-{{ 'success' if member.role == 'manager' else 'secondary' }}">
-                    {{ member.get_role_display() }}
+                    {{ member.role }}
                 </span>
             </div>
             <div>
-                <form method="post" action="{{ url_for('remove_member', team_id=team.id, user_id=member.user.id) }}" 
-                      class="d-inline">
+                <form method="post" 
+                    action="{{ url_for('delete_team_member', team_id=team.id) }}" 
+                    class="d-inline">
+                    <input type="hidden" name="user_id" value="{{ member.user.id }}">
                     <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
                 </form>
             </div>
@@ -31,4 +79,11 @@
         {% endfor %}
     </div>
 </div>
+
+<style>
+.btn-check:checked + .btn {
+    background-color: #0d6efd;
+    color: white;
+}
+</style>
 {% endblock %}

@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, Form, HTTPException, Request, Depends, status
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import RedirectResponse
 
 
 from applications.auth.security import get_current_user
@@ -48,4 +49,88 @@ async def create_team_page(
     )
 
 
-# @router.post()
+@router.post('/create')
+async def create_team(
+    name: str = Form(max_length=100),
+    current_user: User = Depends(get_current_user(admin=True)),
+    members: list[int] = Form(...),
+    session: AsyncSession = Depends(get_db),
+    team_repo: TeamRepository = Depends(get_team_repo)
+):
+    try:
+        await team_repo.add(session, name, members)
+    except Exception as e:
+        return HTTPException(status_code=400, detail=str(e))
+    return RedirectResponse('/teams', status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.get('/{team_id}')
+async def team_detail_page(
+    request: Request,
+    team_id: int,
+    current_user: User = Depends(get_current_user()),
+    session: AsyncSession = Depends(get_db),
+    team_repo: TeamRepository = Depends(get_team_repo),
+    user_repo: UserRepository = Depends(get_user_repo)
+):
+    team = await team_repo.get(session, team_id)
+    all_users = await user_repo.get_all(session)
+    team_member_ids = {member.user.id for member in team.user_teams}
+    available_users = [u for u in all_users if u.id not in team_member_ids]
+    return render_template(
+        request,
+        templates,
+        'team/team_detail.html',
+        {"team": team, "available_users": available_users},
+        current_user
+    )
+
+
+@router.post('/{team_id}/add_team_member')
+async def add_team_member(
+    team_id: int,
+    user_id: int = Form(...),
+    role: str = Form('staff'),
+    current_user: User = Depends(get_current_user(admin=True)),
+    session: AsyncSession = Depends(get_db),
+    team_repo: TeamRepository = Depends(get_team_repo)
+):
+    try:
+        await team_repo.add_member(
+            session,
+            team_id,
+            user_id,
+            role
+        )
+    except Exception as e:
+        return HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    return RedirectResponse(
+        f'/teams/{team_id}',
+        status_code=status.HTTP_303_SEE_OTHER
+    )
+
+
+@router.post('/{team_id}/delete_team_member')
+async def delete_team_member(
+    team_id: int,
+    user_id: int = Form(...),
+    current_user: User = Depends(get_current_user(admin=True)),
+    session: AsyncSession = Depends(get_db),
+    team_repo: TeamRepository = Depends(get_team_repo)
+):
+    try:
+        await team_repo.delete_member(
+            session, team_id, user_id
+        )
+    except Exception as e:
+        return HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    return RedirectResponse(
+        f'/teams/{team_id}',
+        status_code=status.HTTP_303_SEE_OTHER
+    )

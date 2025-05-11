@@ -241,3 +241,14 @@ class TeamRepository(BaseRepository):
             )
         )
         await session.commit()
+
+    async def get_user_team(self, session: AsyncSession, user_id: int):
+        result = await session.execute(
+            select(Team)
+            .options(
+                selectinload(Team.user_teams).joinedload(UserTeam.user)
+            )
+            .where(UserTeam.user_id == user_id)
+        )
+
+        return result.scalars().first()

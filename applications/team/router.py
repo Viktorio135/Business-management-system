@@ -64,6 +64,31 @@ async def create_team(
     return RedirectResponse('/teams', status_code=status.HTTP_303_SEE_OTHER)
 
 
+@router.get('/my_team')
+async def my_team_page(
+    request: Request,
+    current_user: User = Depends(get_current_user()),
+    session: AsyncSession = Depends(get_db),
+    team_repo: TeamRepository = Depends(get_team_repo)
+):
+    team = await team_repo.get_user_team(
+        session,
+        current_user.id
+    )
+    if team:
+        return render_template(
+            request,
+            templates,
+            'team/team_detail.html',
+            {"team": team},
+            current_user
+        )
+    return HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail='Вы не состоите не в одной команде'
+    )
+
+
 @router.get('/{team_id}')
 async def team_detail_page(
     request: Request,

@@ -230,7 +230,7 @@ class TeamRepository(BaseRepository):
         )
         session.add(userteam)
         await session.commit()
-        session.flush()
+        await session.flush()
         return userteam
 
     async def delete_member(self, session: AsyncSession,

@@ -154,3 +154,24 @@ async def delete_team(
         '/teams',
         status_code=status.HTTP_303_SEE_OTHER
     )
+
+
+@router.post('/{team_id}/rename')
+async def rename_team(
+    team_id: int,
+    name: str = Form(..., max_length=100),
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+    team_repo: TeamRepository = Depends(get_team_repo)
+):
+    try:
+        await team_repo.update(session, team_id, {"name": name})
+    except Exception as e:
+        return HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    return RedirectResponse(
+        f'/teams/{team_id}',
+        status_code=status.HTTP_303_SEE_OTHER
+    )

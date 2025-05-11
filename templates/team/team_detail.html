@@ -5,10 +5,48 @@
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>{{ team.name }}</h2>
+        <div class="d-flex align-items-center gap-2">
+            <h2>{{ team.name }}</h2>
+            {% if user.role == "admin" %}
+            <button type="button" 
+                    class="btn btn-sm btn-outline-secondary" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#renameModal">
+                <i class="bi bi-pencil">Переименовать</i>
+            </button>
+            {% endif %}
+        </div>
         <a href="{{ url_for('team_list_page') }}" class="btn btn-outline-secondary">← Назад к списку</a>
     </div>
-
+    <div class="modal fade" id="renameModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Переименовать команду</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" action="{{ url_for('rename_team', team_id=team.id) }}">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Новое название</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   name="name" 
+                                   value="{{ team.name }}" 
+                                   required>
+                        </div>
+                        {% if rename_error %}
+                        <div class="alert alert-danger">{{ rename_error }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <!-- Форма добавления участников -->
     <div class="card mb-4">
         <div class="card-header">Добавить участника</div>
@@ -84,6 +122,9 @@
 .btn-check:checked + .btn {
     background-color: #0d6efd;
     color: white;
+}
+.btn-outline-secondary {
+    padding: 0.25rem 0.5rem;
 }
 </style>
 {% endblock %}

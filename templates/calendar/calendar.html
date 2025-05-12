@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Календарь{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Календарь</h2>
+        <div class="btn-group">
+            <a href="{{ url_for('calendar_view', year=prev_month.year, month=prev_month.month) }}" 
+               class="btn btn-outline-secondary">&lt;</a>
+            <span class="btn btn-light">{{ current_date.strftime('%B %Y') }}</span>
+            <a href="{{ url_for('calendar_view', year=next_month.year, month=next_month.month) }}" 
+               class="btn btn-outline-secondary">&gt;</a>
+        </div>
+    </div>
+
+    <!-- Месячный вид -->
+    <div class="card mb-4">
+        <div class="card-header">
+            Месячный вид
+            <a href="" 
+               class="float-end btn btn-sm btn-link">Дневной вид</a>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 14.28%">Пн</th>
+                        <th style="width: 14.28%">Вт</th>
+                        <th style="width: 14.28%">Ср</th>
+                        <th style="width: 14.28%">Чт</th>
+                        <th style="width: 14.28%">Пт</th>
+                        <th style="width: 14.28%">Сб</th>
+                        <th style="width: 14.28%">Вс</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for week in calendar %}
+                    <tr>
+                        {% for day in week %}
+                        <td style="height: 120px; vertical-align: top">
+                            {% if day.date %}
+                            <div class="p-2">
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">{{ day.date.day }}</small>
+                                    {% if day.date == today %}
+                                    <span class="badge bg-primary">Сегодня</span>
+                                    {% endif %}
+                                </div>
+                                <div class="mt-2">
+                                    {% for event in day.events %}
+                                    <div class="mb-1">
+                                        <small class="d-block text-truncate 
+                                            {% if event.type == 'meeting' %}text-primary{% else %}text-success{% endif %}"
+                                            title="{{ event.title }} | {{ event.time }}">
+                                            {{ event.title }}
+                                        </small>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Ближайшие события -->
+    <div class="card">
+        <div class="card-header">Ближайшие 7 дней</div>
+        <div class="card-body">
+            <div class="list-group">
+                {% for day in upcoming_events %}
+                <div class="list-group-item">
+                    <h6>{{ day.date }}</h6>
+                    {% for event in day.events %}
+                    <div class="ms-3 mt-2">
+                        <div class="d-flex align-items-center">
+                            <span class="badge 
+                                {% if event.type == 'meeting' %}bg-primary{% else %}bg-success{% endif %} 
+                                me-2">{{ event.time }}</span>
+                            <div>{{ event.title }}</div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-muted ms-3">Нет событий</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

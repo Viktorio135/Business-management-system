@@ -11,6 +11,7 @@ from applications.user.router import router as user_router
 from applications.auth.router import router as auth_router
 from applications.task.router import router as task_router
 from applications.team.router import router as team_router
+from applications.meeting.router import router as meeting_router
 
 from database.database import engine, Base
 
@@ -71,3 +72,4 @@ app.include_router(user_router)
 app.include_router(auth_router)
 app.include_router(task_router)
 app.include_router(team_router)
+app.include_router(meeting_router)

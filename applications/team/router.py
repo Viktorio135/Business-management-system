@@ -185,7 +185,7 @@ async def delete_team(
 async def rename_team(
     team_id: int,
     name: str = Form(..., max_length=100),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user(admin=True)),
     session: AsyncSession = Depends(get_db),
     team_repo: TeamRepository = Depends(get_team_repo)
 ):

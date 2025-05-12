@@ -35,7 +35,16 @@ class User(Base):
         default=UserRoleEnum.user.value
     )
 
-    meetings = relationship("Meeting", back_populates="user_meeting")
+    meeting_participants = relationship(
+        'MeetingParticipant',
+        back_populates='user'
+    )
+
+    meetings = relationship(
+        "Meeting",
+        secondary="meeting_participants",
+        viewonly=True
+    )
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -128,16 +137,27 @@ class Team(Base):
     user_teams = relationship('UserTeam', backref='team')
 
 
+class MeetingParticipant(Base):
+    __tablename__ = 'meeting_participants'
+
+    meeting_id = Column(Integer, ForeignKey('meeting.id'), primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
+
+    user = relationship('User', back_populates='meeting_participants')
+    meeting = relationship('Meeting', back_populates='participants')
+
+
 class Meeting(Base):
     __tablename__ = 'meeting'
 
     id = Column(Integer, primary_key=True)
     description = Column(Text)
     date = Column(DateTime)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    creator_id = Column(Integer, ForeignKey('users.id'))
 
-    user_meeting = relationship(
-        "User",
-        back_populates="meetings",
-        foreign_keys=[user_id]
+    participants = relationship(
+        "MeetingParticipant",
+        back_populates="meeting"
     )
+
+    creator = relationship("User", foreign_keys=[creator_id])

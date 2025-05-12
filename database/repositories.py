@@ -1,3 +1,4 @@
+import datetime
 from typing import Any, Dict, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import (func, update as sqlalchemy_update,
@@ -6,7 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 
-from .models import TaskChat, User, Task, Team, UserTeam
+from .models import (TaskChat, User, Task, Team, UserTeam,
+                     Meeting, MeetingParticipant)
 
 
 class BaseRepository:
@@ -211,6 +213,17 @@ class TeamRepository(BaseRepository):
         await session.commit()
         return team
 
+    async def delete(self, session: AsyncSession, team_id: int):
+        await session.execute(
+            sqlalchemy_delete(Team).where(Team.id == team_id)
+        )
+        await session.execute(
+            sqlalchemy_delete(UserTeam).where(
+                UserTeam.team_id == team_id
+            )
+        )
+        await session.commit()
+
     async def get(self, session: AsyncSession, team_id: int):
         result = await session.execute(
             select(Team)
@@ -252,3 +265,79 @@ class TeamRepository(BaseRepository):
         )
 
         return result.scalars().first()
+
+
+class MeetingRepository(BaseRepository):
+    def __init__(self):
+        super().__init__(Meeting)
+
+    async def get(self, session: AsyncSession, meeting_id: int):
+        result = await session.execute(
+            select(Meeting)
+            .options(
+                selectinload(
+                    Meeting.participants
+                ).selectinload(MeetingParticipant.user)
+            )
+            .where(Meeting.id == meeting_id)
+        )
+        return result.scalars().first()
+
+    async def get_all(self, session):
+        result = await session.execute(
+            select(Meeting)
+            .where(Meeting.date > datetime.datetime.now())
+        )
+        return result.scalars().all()
+
+    async def add(self, session: AsyncSession,
+                  date: datetime.datetime,
+                  description: str,
+                  creator_id: int, members: Optional[int] = None):
+        meeting = Meeting(
+            description=description,
+            date=date, creator_id=creator_id
+        )
+        session.add(meeting)
+        await session.flush()
+        if members:
+            for member in members:
+                usermeeting = MeetingParticipant(
+                    user_id=member,
+                    meeting_id=meeting.id,
+                )
+                session.add(usermeeting)
+        await session.commit()
+        return meeting
+
+    async def delete(self, session: AsyncSession, meeting_id: int):
+        await session.execute(
+            sqlalchemy_delete(Meeting).where(Meeting.id == meeting_id)
+        )
+        await session.execute(
+            sqlalchemy_delete(MeetingParticipant).where(
+                MeetingParticipant.meeting_id == meeting_id
+            )
+        )
+        await session.commit()
+
+    async def add_member(self, session: AsyncSession,
+                         meeting_id: int, user_id: int):
+        usermeeting = MeetingParticipant(
+            user_id=user_id,
+            meeting_id=meeting_id
+        )
+        session.add(usermeeting)
+        await session.commit()
+        await session.flush()
+        return usermeeting
+
+    async def delete_member(self, session: AsyncSession,
+                            meeting_id: int, user_id: int):
+        await session.execute(
+            sqlalchemy_delete(MeetingParticipant).where(
+                (MeetingParticipant.meeting_id == meeting_id) &
+                (MeetingParticipant.user_id == user_id)
+            )
+        )
+        await session.commit()

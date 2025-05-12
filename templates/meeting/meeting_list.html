@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Список встреч{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Все встречи</h2>
+        <a href="{{ url_for('create_meeting_page') }}" class="btn btn-primary">
+            + Новая встреча
+        </a>
+    </div>
+
+    <div class="list-group">
+        {% for meeting in meetings %}
+        <div class="list-group-item">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5>{{ meeting.description }}</h5>
+                    <small class="text-muted">
+                        {{ meeting.date.strftime('%d.%m.%Y %H:%M') }}
+                    </small>
+                </div>
+                <div>
+                    <a href="{{ url_for('meeting_detail_page', meeting_id=meeting.id) }}" 
+                       class="btn btn-sm btn-info">Подробнее</a>
+                    <form method="post" 
+                          action="{{ url_for('delete_meeting', meeting_id=meeting.id) }}" 
+                          class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">Нет запланированных встреч</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

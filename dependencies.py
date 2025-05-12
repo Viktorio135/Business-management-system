@@ -1,5 +1,6 @@
 from database.repositories import (UserRepository, TaskRepository,
-                                   TaskChatRepository, TeamRepository)
+                                   TaskChatRepository, TeamRepository,
+                                   MeetingRepository)
 
 
 def get_user_repo():
@@ -16,3 +17,7 @@ def get_taskchat_repo():
 
 def get_team_repo():
     return TeamRepository()
+
+
+def get_meeting_repo():
+    return MeetingRepository()

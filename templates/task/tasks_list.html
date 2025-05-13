@@ -5,6 +5,9 @@
 {% block content %}
 <div class="container">
     <h2 class="my-4">Список задач</h2>
+    {% if user.role == "admin" %}
+    <a href="/tasks/create" class="btn btn-primary mb-3">Создать новое задание</a>
+    {% endif %}
     {% if avg and user.role != "admin" %}<h2 class="my-4">Средняя оценка: {{ avg }}</h2>{% endif %}
     
     <div class="row">

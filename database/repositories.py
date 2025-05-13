@@ -1,7 +1,7 @@
 import datetime
 from typing import Any, Dict, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import (func, update as sqlalchemy_update,
+from sqlalchemy import (and_, func, update as sqlalchemy_update,
                         delete as sqlalchemy_delete)
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -93,6 +93,26 @@ class UserRepository(BaseRepository):
         await session.refresh(user)
         return user
 
+    async def update_password(
+        self, session: AsyncSession, user_id: int, new_password: str
+    ):
+        user = await session.execute(
+            select(User)
+            .where(
+                User.id == user_id
+            )
+        )
+        user = user.scalars().first()
+        if user:
+            user.set_password(new_password)
+            session.add(user)
+            await session.commit()
+            await session.refresh(user)
+            return user
+        raise ValueError(
+            "Такого пользователя не существует"
+        )
+
 
 class TaskRepository(BaseRepository):
     def __init__(self):
@@ -148,6 +168,22 @@ class TaskRepository(BaseRepository):
             "tasks": tasks,
             "avg": average_assessment
         }
+
+    async def get_task_with_date(
+        self, session: AsyncSession,
+        user_id: int, month_start: datetime.datetime,
+        month_end: datetime.datetime
+    ):
+        result = await session.execute(select(Task).where(
+                and_(
+                    Task.performer == user_id,
+                    Task.deadline >= month_start,
+                    Task.deadline <= month_end,
+                    Task.status != "completed"
+                )
+            ).order_by(Task.deadline)
+        )
+        return result.scalars().all()
 
     async def get_user_tasks(self, session: AsyncSession,
                              task_id: int, user_id: int):
@@ -341,3 +377,21 @@ class MeetingRepository(BaseRepository):
             )
         )
         await session.commit()
+
+    async def get_meeting_with_date(
+        self,
+        session: AsyncSession,
+        month_start: datetime,
+        month_end: datetime,
+        user_id: int  # <- передаём ID пользователя
+    ):
+        meetings_query = await session.execute(
+            select(Meeting)
+            .join(MeetingParticipant)
+            .where(
+                Meeting.date >= month_start,
+                Meeting.date <= month_end,
+                MeetingParticipant.user_id == user_id
+            ).order_by(Meeting.date)
+        )
+        return meetings_query.scalars().all()

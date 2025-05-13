@@ -1,4 +1,5 @@
 import datetime
+from typing import Optional
 
 from fastapi import APIRouter, Form, Query, Request, Depends, status
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -200,7 +201,7 @@ async def edit_task(
     status: str = Form(...),
     performer: int = Form(...),
     deadline: datetime.datetime = Form(...),
-    assessment: int = Form(...),
+    assessment: Optional[str] = Form(None),
     session: AsyncSession = Depends(get_db),
     task_repo: TaskRepository = Depends(get_task_repo),
     current_user: User = Depends(get_current_user())
@@ -214,7 +215,9 @@ async def edit_task(
                     "status": status,
                     "performer": performer,
                     "deadline": deadline,
-                    "assessment": assessment
+                    "assessment": (
+                        int(assessment) if assessment and assessment.isdigit() else None
+                    )
                 }
             )
             return RedirectResponse(

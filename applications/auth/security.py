@@ -37,10 +37,7 @@ def get_current_user(
 
         if not token:
             if need_auth:
-                raise HTTPException(
-                    status_code=status.HTTP_307_TEMPORARY_REDIRECT,
-                    headers={"Location": "/auth/login"}
-                )
+                raise HTTPException(status_code=401, detail="Unauthorized")
             return None
 
         try:
@@ -56,19 +53,13 @@ def get_current_user(
                 )
         except (JWTError, IndexError, KeyError):
             if need_auth:
-                raise HTTPException(
-                    status_code=status.HTTP_307_TEMPORARY_REDIRECT,
-                    headers={"Location": "/auth/login"}
-                )
+                raise HTTPException(status_code=401, detail="Unauthorized")
             return None
 
         user = await user_repo.get(session, int(user_id))
         if not user:
             if need_auth:
-                raise HTTPException(
-                    status_code=status.HTTP_307_TEMPORARY_REDIRECT,
-                    headers={"Location": "/auth/login"}
-                )
+                raise HTTPException(status_code=401, detail="Unauthorized")
             return None
 
         if admin and user.role != "admin":

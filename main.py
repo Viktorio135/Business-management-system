@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, status
 from contextlib import asynccontextmanager
 from fastapi.exceptions import RequestValidationError
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -32,6 +33,13 @@ app = FastAPI(lifespan=lifespan)
 templates = Jinja2Templates(directory="templates")
 
 
+@app.exception_handler(401)
+async def unauthorized_handler(request: Request, exc: HTTPException):
+    return RedirectResponse(
+        "/auth/login", status_code=status.HTTP_303_SEE_OTHER
+    )
+
+
 @app.exception_handler(404)
 async def not_found_exception_handler(request: Request, exc: HTTPException):
     return templates.TemplateResponse(
@@ -41,15 +49,15 @@ async def not_found_exception_handler(request: Request, exc: HTTPException):
     )
 
 
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(
-    request: Request, exc: RequestValidationError
-):
-    return templates.TemplateResponse(
-        "errors/400.html",
-        {"request": request},
-        status_code=400
-    )
+# @app.exception_handler(RequestValidationError)
+# async def validation_exception_handler(
+#     request: Request, exc: RequestValidationError
+# ):
+#     return templates.TemplateResponse(
+#         "errors/400.html",
+#         {"request": request},
+#         status_code=400
+#     )
 
 
 @app.exception_handler(StarletteHTTPException)

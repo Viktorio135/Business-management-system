@@ -14,6 +14,7 @@ from applications.task.router import router as task_router
 from applications.team.router import router as team_router
 from applications.meeting.router import router as meeting_router
 from applications.calendar.router import router as calendar_router
+from applications.admin_panel.router import router as admin_router
 
 from database.database import engine, Base
 
@@ -49,15 +50,15 @@ async def not_found_exception_handler(request: Request, exc: HTTPException):
     )
 
 
-# @app.exception_handler(RequestValidationError)
-# async def validation_exception_handler(
-#     request: Request, exc: RequestValidationError
-# ):
-#     return templates.TemplateResponse(
-#         "errors/400.html",
-#         {"request": request},
-#         status_code=400
-#     )
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+):
+    return templates.TemplateResponse(
+        "errors/400.html",
+        {"request": request},
+        status_code=400
+    )
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -83,3 +84,4 @@ app.include_router(task_router)
 app.include_router(team_router)
 app.include_router(meeting_router)
 app.include_router(calendar_router)
+app.include_router(admin_router)

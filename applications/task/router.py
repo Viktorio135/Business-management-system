@@ -216,7 +216,8 @@ async def edit_task(
                     "performer": performer,
                     "deadline": deadline,
                     "assessment": (
-                        int(assessment) if assessment and assessment.isdigit() else None
+                        int(assessment) if assessment and assessment.isdigit()
+                        else None
                     )
                 }
             )

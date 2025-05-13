@@ -29,28 +29,6 @@ class RegUserModel(BaseModel):
             raise ValueError('Пароли не совпадают')
         return v
 
-    # @field_validator('password1')
-    # def validate_password(cls, v):
-    #     if len(v) < 8:
-    #         raise ValueError('Пароль должен быть не менее 8 символов')
-
-    #     if not re.search(r'\d', v):
-    #         raise ValueError('Пароль должен содержать хотя бы одну цифру')
-
-    #     if not re.search(r'[A-Z]', v):
-    #         raise ValueError('Пароль должен содержать хотя бы одну заглавную букву')
-
-    #     if not re.search(r'[a-z]', v):
-    #         raise ValueError('Пароль должен содержать хотя бы одну строчную букву')
-
-    #     if not re.search(r'[!@#$%^&*(),.?":{}|<>]', v):
-    #         raise ValueError('Пароль должен содержать хотя бы один специальный символ')
-
-    #     if ' ' in v:
-    #         raise ValueError('Пароль не должен содержать пробелов')
-
-    #     return v
-
 
 class UserOut(BaseModel):
     id: int

@@ -1,8 +1,12 @@
+import os
+
+
 from datetime import datetime, timedelta
 from fastapi import Depends, HTTPException, Request, status
 from jose import JWTError, jwt
 from typing import Optional
 from sqladmin.authentication import AuthenticationBackend
+from dotenv import load_dotenv
 
 
 from database.repositories import UserRepository
@@ -10,10 +14,12 @@ from database.database import get_db, AsyncSession, async_session_maker
 from database.models import User
 from dependencies import get_user_repo
 
+load_dotenv()
 
-SECRET_KEY = "your-secret-key"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 360
+
+SECRET_KEY = os.environ.get('SECRET_KEY')
+ALGORITHM = os.environ.get('ALGORITHM')
+ACCESS_TOKEN_EXPIRE_MINUTES = os.environ.get('ACCESS_TOKEN_EXPIRE_MINUTES')
 
 
 def create_access_token(data: dict, expires_delta: timedelta):

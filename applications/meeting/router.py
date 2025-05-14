@@ -15,11 +15,14 @@ from utils import render_template
 router = APIRouter(prefix='/meetings')
 templates = Jinja2Templates(directory="templates")
 
+get_current_user_dep = get_current_user()
+get_current_user_dep_admin = get_current_user(admin=True)
+
 
 @router.get('')
 async def meeting_list_page(
     request: Request,
-    current_user: User = Depends(get_current_user(admin=True)),
+    current_user: User = Depends(get_current_user_dep_admin),
     session: AsyncSession = Depends(get_db),
     meeting_repo: MeetingRepository = Depends(get_meeting_repo)
 ):
@@ -36,7 +39,7 @@ async def meeting_list_page(
 @router.get('/create')
 async def create_meeting_page(
     request: Request,
-    current_user: User = Depends(get_current_user(admin=True)),
+    current_user: User = Depends(get_current_user_dep_admin),
     session: AsyncSession = Depends(get_db),
     user_repo: UserRepository = Depends(get_user_repo)
 ):
@@ -55,7 +58,7 @@ async def create_meeting(
     description: str = Form(...),
     members: list[int] = Form(...),
     date: datetime.datetime = Form(...),
-    current_user: User = Depends(get_current_user(admin=True)),
+    current_user: User = Depends(get_current_user_dep_admin),
     session: AsyncSession = Depends(get_db),
     meeting_repo: MeetingRepository = Depends(get_meeting_repo)
 ):
@@ -72,7 +75,7 @@ async def create_meeting(
 async def meeting_detail_page(
     request: Request,
     meeting_id: int,
-    current_user: User = Depends(get_current_user()),
+    current_user: User = Depends(get_current_user_dep),
     session: AsyncSession = Depends(get_db),
     meeting_repo: MeetingRepository = Depends(get_meeting_repo),
     user_repo: UserRepository = Depends(get_user_repo)
@@ -94,7 +97,7 @@ async def meeting_detail_page(
 async def add_meeting_member(
     meeting_id: int,
     user_id: int = Form(...),
-    current_user: User = Depends(get_current_user(admin=True)),
+    current_user: User = Depends(get_current_user_dep_admin),
     session: AsyncSession = Depends(get_db),
     meeting_repo: MeetingRepository = Depends(get_meeting_repo)
 ):
@@ -119,7 +122,7 @@ async def add_meeting_member(
 async def delete_meeting_member(
     meeting_id: int,
     user_id: int = Form(...),
-    current_user: User = Depends(get_current_user(admin=True)),
+    current_user: User = Depends(get_current_user_dep_admin),
     session: AsyncSession = Depends(get_db),
     meeting_repo: MeetingRepository = Depends(get_meeting_repo)
 ):
@@ -141,7 +144,7 @@ async def delete_meeting_member(
 @router.post('/{meeting_id}/delete')
 async def delete_meeting(
     meeting_id: int,
-    current_user: User = Depends(get_current_user(admin=True)),
+    current_user: User = Depends(get_current_user_dep_admin),
     session: AsyncSession = Depends(get_db),
     meeting_repo: MeetingRepository = Depends(get_meeting_repo)
 ):
@@ -163,7 +166,7 @@ async def edit_meeting(
     meeting_id: int,
     description: str = Form(...),
     date: datetime.datetime = Form(...),
-    current_user: User = Depends(get_current_user(admin=True)),
+    current_user: User = Depends(get_current_user_dep_admin),
     session: AsyncSession = Depends(get_db),
     meeting_repo: MeetingRepository = Depends(get_meeting_repo)
 ):

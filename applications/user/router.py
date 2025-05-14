@@ -17,10 +17,13 @@ router = APIRouter(prefix='/users')
 templates = Jinja2Templates(directory="templates")
 
 
+get_current_user_dep = get_current_user()
+
+
 @router.get("/profile", response_class=HTMLResponse)
 async def profile_page(
     request: Request,
-    current_user: User = Depends(get_current_user())
+    current_user: User = Depends(get_current_user_dep)
 ):
     return render_template(
         request,
@@ -33,7 +36,7 @@ async def profile_page(
 
 @router.post('/edit')
 async def profile_edit(
-    current_user: User = Depends(get_current_user()),
+    current_user: User = Depends(get_current_user_dep),
     name: str = Form(..., max_length=20),
     lastname: str = Form(..., max_length=30),
     email: EmailStr = Form(...),
@@ -76,7 +79,7 @@ async def profile_edit(
 
 @router.post('/delete')
 async def profile_delete(
-    current_user: User = Depends(get_current_user()),
+    current_user: User = Depends(get_current_user_dep),
     password: str = Form(...),
     user_repo: UserRepository = Depends(get_user_repo),
     session: AsyncSession = Depends(get_db)

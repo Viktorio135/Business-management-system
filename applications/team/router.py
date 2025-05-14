@@ -14,11 +14,14 @@ from utils import render_template
 router = APIRouter(prefix='/teams')
 templates = Jinja2Templates(directory="templates")
 
+get_current_user_dep = get_current_user()
+get_current_user_dep_admin = get_current_user(admin=True)
+
 
 @router.get('')
 async def team_list_page(
     request: Request,
-    current_user: User = Depends(get_current_user(admin=True)),
+    current_user: User = Depends(get_current_user_dep_admin),
     session: AsyncSession = Depends(get_db),
     team_repo: TeamRepository = Depends(get_team_repo)
 ):
@@ -35,7 +38,7 @@ async def team_list_page(
 @router.get('/create')
 async def create_team_page(
     request: Request,
-    current_user: User = Depends(get_current_user(admin=True)),
+    current_user: User = Depends(get_current_user_dep_admin),
     session: AsyncSession = Depends(get_db),
     user_repo: UserRepository = Depends(get_user_repo),
 ):
@@ -52,7 +55,7 @@ async def create_team_page(
 @router.post('/create')
 async def create_team(
     name: str = Form(max_length=100),
-    current_user: User = Depends(get_current_user(admin=True)),
+    current_user: User = Depends(get_current_user_dep_admin),
     members: list[int] = Form(...),
     session: AsyncSession = Depends(get_db),
     team_repo: TeamRepository = Depends(get_team_repo)
@@ -67,7 +70,7 @@ async def create_team(
 @router.get('/my_team')
 async def my_team_page(
     request: Request,
-    current_user: User = Depends(get_current_user()),
+    current_user: User = Depends(get_current_user_dep),
     session: AsyncSession = Depends(get_db),
     team_repo: TeamRepository = Depends(get_team_repo)
 ):
@@ -93,7 +96,7 @@ async def my_team_page(
 async def team_detail_page(
     request: Request,
     team_id: int,
-    current_user: User = Depends(get_current_user()),
+    current_user: User = Depends(get_current_user_dep),
     session: AsyncSession = Depends(get_db),
     team_repo: TeamRepository = Depends(get_team_repo),
     user_repo: UserRepository = Depends(get_user_repo)
@@ -116,7 +119,7 @@ async def add_team_member(
     team_id: int,
     user_id: int = Form(...),
     role: str = Form('staff'),
-    current_user: User = Depends(get_current_user(admin=True)),
+    current_user: User = Depends(get_current_user_dep_admin),
     session: AsyncSession = Depends(get_db),
     team_repo: TeamRepository = Depends(get_team_repo)
 ):
@@ -142,7 +145,7 @@ async def add_team_member(
 async def delete_team_member(
     team_id: int,
     user_id: int = Form(...),
-    current_user: User = Depends(get_current_user(admin=True)),
+    current_user: User = Depends(get_current_user_dep_admin),
     session: AsyncSession = Depends(get_db),
     team_repo: TeamRepository = Depends(get_team_repo)
 ):
@@ -164,7 +167,7 @@ async def delete_team_member(
 @router.post('/{team_id}/delete')
 async def delete_team(
     team_id: int,
-    current_user: User = Depends(get_current_user(admin=True)),
+    current_user: User = Depends(get_current_user_dep_admin),
     session: AsyncSession = Depends(get_db),
     team_repo: TeamRepository = Depends(get_team_repo)
 ):
@@ -185,7 +188,7 @@ async def delete_team(
 async def rename_team(
     team_id: int,
     name: str = Form(..., max_length=100),
-    current_user: User = Depends(get_current_user(admin=True)),
+    current_user: User = Depends(get_current_user_dep_admin),
     session: AsyncSession = Depends(get_db),
     team_repo: TeamRepository = Depends(get_team_repo)
 ):

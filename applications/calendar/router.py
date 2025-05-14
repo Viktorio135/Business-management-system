@@ -18,6 +18,8 @@ from dependencies import get_meeting_repo, get_task_repo
 router = APIRouter(prefix='/calendar')
 templates = Jinja2Templates(directory="templates")
 
+get_current_user_dep = get_current_user()
+
 
 @router.get("", name="calendar_view")
 async def calendar_view(
@@ -25,7 +27,7 @@ async def calendar_view(
     year: int = Query(default=datetime.today().year),
     month: int = Query(default=datetime.today().month),
     session: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user()),
+    current_user: User = Depends(get_current_user_dep),
     meeting_repo: MeetingRepository = Depends(get_meeting_repo),
     task_repo: TaskRepository = Depends(get_task_repo)
 ):

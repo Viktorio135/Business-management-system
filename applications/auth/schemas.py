@@ -1,4 +1,4 @@
-from pydantic import (BaseModel, Field, EmailStr, field_validator)
+from pydantic import (BaseModel, ConfigDict, Field, EmailStr, field_validator)
 
 
 from database.models import UserRoleEnum
@@ -31,11 +31,10 @@ class RegUserModel(BaseModel):
 
 
 class UserOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     lastname: str
     email: EmailStr
     role: UserRoleEnum
-
-    class Config:
-        orm_mode = True

@@ -19,11 +19,14 @@ from utils import render_template
 router = APIRouter(prefix='/tasks')
 templates = Jinja2Templates(directory="templates")
 
+get_current_user_dep = get_current_user()
+get_current_user_dep_admin = get_current_user(admin=True)
+
 
 @router.get('')
 async def tasks_list_page(
     request: Request,
-    current_user: User = Depends(get_current_user()),
+    current_user: User = Depends(get_current_user_dep),
     task_repo: TaskRepository = Depends(get_task_repo),
     session: AsyncSession = Depends(get_db)
 ):
@@ -41,7 +44,7 @@ async def tasks_list_page(
 async def create_task_page(
     request: Request, error: str = None,
     current_user: User = Depends(
-        get_current_user(admin=True)
+        get_current_user_dep_admin
     ),
     user_repo: UserRepository = Depends(get_user_repo),
     session: AsyncSession = Depends(get_db)
@@ -65,7 +68,7 @@ async def create_task(
     deadline: datetime.datetime = Form(...),
     task_repo: TaskRepository = Depends(get_task_repo),
     session: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user(admin=True))
+    current_user: User = Depends(get_current_user_dep_admin)
 ):
 
     try:
@@ -96,7 +99,7 @@ async def task_detail_page(
     request: Request,
     session: AsyncSession = Depends(get_db),
     task_repo: TaskRepository = Depends(get_task_repo),
-    current_user: User = Depends(get_current_user())
+    current_user: User = Depends(get_current_user_dep)
 ):
     task = await task_repo.get_user_tasks(session, task_id, current_user.id)
 
@@ -121,7 +124,7 @@ async def change_status(
     task_status: str,
     session: AsyncSession = Depends(get_db),
     task_repo: TaskRepository = Depends(get_task_repo),
-    current_user: User = Depends(get_current_user())
+    current_user: User = Depends(get_current_user_dep)
 ):
     await task_repo.update_status(
         session, task_id, task_status
@@ -137,7 +140,7 @@ async def change_assessment(
     task_id: int, assessment: int = Query(ge=1, le=5),
     session: AsyncSession = Depends(get_db),
     task_repo: TaskRepository = Depends(get_task_repo),
-    current_user: User = Depends(get_current_user())
+    current_user: User = Depends(get_current_user_dep)
 ):
     await task_repo.update_assessment(
         session, task_id, assessment
@@ -153,7 +156,7 @@ async def delete_task(
     task_id: int,
     session: AsyncSession = Depends(get_db),
     task_repo: TaskRepository = Depends(get_task_repo),
-    current_user: User = Depends(get_current_user())
+    current_user: User = Depends(get_current_user_dep)
 ):
     task = await task_repo.get(session, task_id)
     if task and (task.creator == current_user.id):
@@ -172,7 +175,7 @@ async def edit_task_page(
     session: AsyncSession = Depends(get_db),
     task_repo: TaskRepository = Depends(get_task_repo),
     user_repo: UserRepository = Depends(get_user_repo),
-    current_user: User = Depends(get_current_user())
+    current_user: User = Depends(get_current_user_dep)
 ):
     task = await task_repo.get(session, task_id)
     if task and (task.creator == current_user.id):
@@ -204,7 +207,7 @@ async def edit_task(
     assessment: Optional[str] = Form(None),
     session: AsyncSession = Depends(get_db),
     task_repo: TaskRepository = Depends(get_task_repo),
-    current_user: User = Depends(get_current_user())
+    current_user: User = Depends(get_current_user_dep)
 ):
     task = await task_repo.get(session, task_id)
     if task and (task.creator == current_user.id):
@@ -239,7 +242,7 @@ async def add_comment(
     session: AsyncSession = Depends(get_db),
     taskchat_repo: TaskChatRepository = Depends(get_taskchat_repo),
     task_repo: TaskRepository = Depends(get_task_repo),
-    current_user: User = Depends(get_current_user())
+    current_user: User = Depends(get_current_user_dep)
 ):
     task = await task_repo.get(session, task_id)
     if task and (task.creator == current_user.id or

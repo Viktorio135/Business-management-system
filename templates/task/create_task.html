@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Создание задачи{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="my-4">Создание новой задачи</h2>
+    <form method="post">
+        <div class="mb-3">
+            <label for="performer-search" class="form-label">Исполнитель</label>
+            <input type="text" 
+                   class="form-control" 
+                   id="performer-search" 
+                   placeholder="Начните вводить имя или email"
+                   autocomplete="off">
+            
+            <select class="form-control mt-2" 
+                    id="performer" 
+                    name="performer" 
+                    required
+                    style="display: none">
+                {% for user in users %}
+                <option value="{{ user.id }}">
+                    {{ user.name }} {{ user.lastname }} ({{ user.email }})
+                </option>
+                {% endfor %}
+            </select>
+            
+            <div id="user-results" class="list-group mt-1" style="display: none;"></div>
+        </div>
+        
+        <div class="mb-3">
+            <label for="description" class="form-label">Описание задачи</label>
+            <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+        </div>
+        
+        <div class="mb-3">
+            <label for="deadline" class="form-label">Срок выполнения</label>
+            <input type="datetime-local" class="form-control" id="deadline" name="deadline" required>
+        </div>
+        
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+        
+        <button type="submit" class="btn btn-primary">Создать задачу</button>
+        <a href="/tasks" class="btn btn-secondary">Отмена</a>
+    </form>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('performer-search');
+        const userResults = document.getElementById('user-results');
+        const hiddenSelect = document.getElementById('performer');
+        const allUsers = [
+            {% for user in users %}
+            {
+                id: {{ user.id }},
+                name: '{{ user.name }}',
+                lastname: '{{ user.lastname }}',
+                email: '{{ user.email }}',
+                search: '{{ user.name|lower }} {{ user.lastname|lower }} {{ user.email|lower }}'
+            },
+            {% endfor %}
+        ];
+    
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredUsers = allUsers.filter(user => 
+                user.search.includes(searchTerm)
+            );
+    
+            userResults.innerHTML = '';
+            userResults.style.display = 'block';
+    
+            filteredUsers.forEach(user => {
+                const item = document.createElement('a');
+                item.className = 'list-group-item list-group-item-action';
+                item.innerHTML = `
+                    <strong>${user.name} ${user.lastname}</strong>
+                    <span class="text-muted">${user.email}</span>
+                `;
+                item.addEventListener('click', () => {
+                    hiddenSelect.value = user.id;
+                    searchInput.value = `${user.name} ${user.lastname} (${user.email})`;
+                    userResults.style.display = 'none';
+                });
+                userResults.appendChild(item);
+            });
+    
+            if (filteredUsers.length === 0) {
+                const item = document.createElement('div');
+                item.className = 'list-group-item';
+                item.textContent = 'Пользователи не найдены';
+                userResults.appendChild(item);
+            }
+        });
+    
+        searchInput.addEventListener('focus', () => {
+            userResults.style.display = 'block';
+        });
+    
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#user-results') && e.target !== searchInput) {
+                userResults.style.display = 'none';
+            }
+        });
+    });
+</script>
+    
+<style>
+#user-results {
+    position: absolute;
+    z-index: 1000;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+}
+.list-group-item {
+    cursor: pointer;
+}
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

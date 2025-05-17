@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Создание встречи{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Новая встреча</h2>
+    <form method="post">
+        <div class="mb-3">
+            <label class="form-label">Описание</label>
+            <textarea class="form-control" name="description" rows="3" required></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Дата и время</label>
+            <input type="datetime-local" class="form-control" name="date" required>
+        </div>
+
+        <div class="mb-4">
+            <label for="members" class="form-label">Выберите участников</label>
+            <select class="form-select" 
+                    id="members" 
+                    name="members" 
+                    multiple
+                    size="5"
+                    aria-describedby="membersHelp">
+                {% for user in users %}
+                <option value="{{ user.id }}">
+                    {{ user.name }} {{ user.lastname }} ({{ user.email }})
+                </option>
+                {% endfor %}
+            </select>
+            <div id="membersHelp" class="form-text">
+                Для выбора нескольких участников удерживайте Ctrl (Windows) или Command (Mac)
+            </div>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+
+        <button type="submit" class="btn btn-primary">Создать</button>
+        <a href="" class="btn btn-secondary">Отмена</a>
+    </form>
+</div>
+<style>
+    .form-select {
+        height: auto;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .form-check-label {
+        margin-left: 0.5rem;
+    }
+    </style>
+{% endblock %}

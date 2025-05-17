@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Редактирование задачи #{{ task.id }}{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <h2 class="my-4">Редактирование задачи #{{ task.id }}</h2>
+    
+    <form method="post" action="/tasks/{{ task.id }}/edit">        
+        <div class="mb-3">
+            <label for="description" class="form-label">Описание</label>
+            <textarea class="form-control" 
+                      id="description" 
+                      name="description"
+                      rows="5"
+                      required>{{ task.description }}</textarea>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="status" class="form-label">Статус</label>
+                <select class="form-select" 
+                        id="status" 
+                        name="status" 
+                        required>
+                    {% for status_code, status_name in status_choices %}
+                    <option value="{{ status_code }}" 
+                            {% if task.status == status_code %}selected{% endif %}>
+                        {{ status_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label for="performer" class="form-label">Исполнитель</label>
+                <select class="form-select" 
+                        id="performer" 
+                        name="performer" 
+                        required>
+                    {% for user in users %}
+                    <option value="{{ user.id }}"
+                            {% if task.performer == user.id %}selected{% endif %}>
+                        {{ user.name }} {{ user.lastname }} ({{ user.email }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="deadline" class="form-label">Срок выполнения</label>
+                <input type="datetime-local" 
+                       class="form-control" 
+                       id="deadline" 
+                       name="deadline"
+                       value="{{ task.deadline }}"
+                       required>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label for="assessment" class="form-label">Оценка (1-5)</label>
+                <input type="number" 
+                       class="form-control" 
+                       id="assessment" 
+                       name="assessment"
+                       min="1" 
+                       max="5"
+                       value="{{ task.assessment if task.assessment else '' }}">
+            </div>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a href="/tasks/{{ task.id }}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

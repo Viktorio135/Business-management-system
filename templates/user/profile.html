@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Профиль пользователя</span>
+                <div>
+                    <button type="button" 
+                            class="btn btn-sm btn-outline-primary" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#editProfileModal">
+                        Редактировать
+                    </button>
+                    <button type="button" 
+                            class="btn btn-sm btn-outline-danger" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#deleteProfileModal">
+                        Удалить
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Имя:</dt>
+                    <dd class="col-sm-8">{{ user.name }}</dd>
+
+                    <dt class="col-sm-4">Фамилия:</dt>
+                    <dd class="col-sm-8">{{ user.lastname }}</dd>
+
+                    <dt class="col-sm-4">Email:</dt>
+                    <dd class="col-sm-8">{{ user.email }}</dd>
+
+                    <dt class="col-sm-4">Роль:</dt>
+                    <dd class="col-sm-8">{{ user.role }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования -->
+<div class="modal fade" id="editProfileModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Редактирование профиля</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('profile_edit') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Имя</label>
+                        <input type="text" 
+                               class="form-control" 
+                               name="name" 
+                               value="{{ user.name }}" 
+                               required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Фамилия</label>
+                        <input type="text" 
+                               class="form-control" 
+                               name="lastname" 
+                               value="{{ user.lastname }}" 
+                               required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" 
+                               class="form-control" 
+                               name="email" 
+                               value="{{ user.email }}" 
+                               required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Новый пароль</label>
+                        <input type="password" 
+                               class="form-control" 
+                               name="new_password" 
+                               placeholder="Оставьте пустым, если не меняется">
+                    </div>
+                    {% if error %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно удаления -->
+<div class="modal fade" id="deleteProfileModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Удаление профиля</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('profile_delete') }}">
+                <div class="modal-body">
+                    <p>Вы уверены, что хотите удалить свой профиль? Это действие нельзя отменить.</p>
+                    <div class="mb-3">
+                        <label class="form-label">Введите пароль для подтверждения</label>
+                        <input type="password" 
+                               class="form-control" 
+                               name="password" 
+                               required>
+                    </div>
+                    {% if delete_error %}
+                    <div class="alert alert-danger">{{ delete_error }}</div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-danger">Удалить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

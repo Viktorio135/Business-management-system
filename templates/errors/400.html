@@ -1,0 +1,12 @@
+{% extends "base_errors.html" %}
+
+{% block title %}400 - Неверный запрос{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <h1 class="display-1 text-danger">400</h1>
+    <h2 class="mb-4">Неверный запрос</h2>
+    <p>Проверьте правильность введенных данных</p>
+    <a href="/users/profile" class="btn btn-primary">На главную</a>
+</div>
+{% endblock %}

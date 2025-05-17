@@ -11,7 +11,7 @@ from dependencies import get_team_repo, get_user_repo
 from utils import render_template
 
 
-router = APIRouter(prefix='/teams')
+router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
 get_current_user_dep = get_current_user()
@@ -63,7 +63,7 @@ async def create_team(
     try:
         await team_repo.add(session, name, members)
     except Exception as e:
-        return HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
     return RedirectResponse('/teams', status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -86,7 +86,7 @@ async def my_team_page(
             {"team": team},
             current_user
         )
-    return HTTPException(
+    raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail='Вы не состоите не в одной команде'
     )
@@ -131,7 +131,7 @@ async def add_team_member(
             role
         )
     except Exception as e:
-        return HTTPException(
+        raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
@@ -154,7 +154,7 @@ async def delete_team_member(
             session, team_id, user_id
         )
     except Exception as e:
-        return HTTPException(
+        raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
@@ -174,7 +174,7 @@ async def delete_team(
     try:
         await team_repo.delete(session, team_id)
     except Exception as e:
-        return HTTPException(
+        raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
@@ -195,7 +195,7 @@ async def rename_team(
     try:
         await team_repo.update(session, team_id, {"name": name})
     except Exception as e:
-        return HTTPException(
+        raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )

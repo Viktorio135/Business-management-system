@@ -16,7 +16,7 @@ from applications.auth.security import get_current_user
 from utils import render_template
 
 
-router = APIRouter(prefix='/tasks')
+router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
 get_current_user_dep = get_current_user()
@@ -104,10 +104,10 @@ async def task_detail_page(
     task = await task_repo.get_user_tasks(session, task_id, current_user.id)
 
     if current_user.id not in (task.creator, task.performer):
-        return HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     if not task:
-        return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     return render_template(
         request,
@@ -193,7 +193,7 @@ async def edit_task_page(
              "users": users},
             current_user
         )
-    return HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
 
 @router.post('/{task_id}/edit')
@@ -229,7 +229,7 @@ async def edit_task(
                 status_code=303
             )
         except Exception as e:
-            return HTTPException(
+            raise HTTPException(
                 status_code=400,
                 detail=str(e)
             )
@@ -258,10 +258,10 @@ async def add_comment(
                     status_code=status.HTTP_303_SEE_OTHER
                 )
         except Exception as e:
-            return HTTPException(
+            raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=str(e)
             )
-    return HTTPException(
+    raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN
     )

@@ -15,17 +15,35 @@ from utils import render_template
 from dependencies import get_meeting_repo, get_task_repo
 
 
-router = APIRouter(prefix='/calendar')
+router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
 get_current_user_dep = get_current_user()
 
 
+def format_event(event, date_getter, event_type: str):
+    return {
+        "title": event.description[:30],
+        "time": date_getter(event).strftime("%H:%M"),
+        "type": event_type,
+    }
+
+
+def group_events_by_day(events, date_getter, event_type: str):
+    grouped = {}
+    for event in events:
+        day_key = date_getter(event).date()
+        grouped.setdefault(day_key, []).append(
+            format_event(event, date_getter, event_type)
+        )
+    return grouped
+
+
 @router.get("", name="calendar_view")
 async def calendar_view(
     request: Request,
-    year: int = Query(default=datetime.today().year),
-    month: int = Query(default=datetime.today().month),
+    year: int = Query(default=date.today().year),
+    month: int = Query(default=date.today().month),
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user_dep),
     meeting_repo: MeetingRepository = Depends(get_meeting_repo),
@@ -36,8 +54,8 @@ async def calendar_view(
 
     # Диапазон дат месяца
     month_start = datetime(year, month, 1)
-    next_month = (month_start + timedelta(days=32)).replace(day=1)
-    month_end = next_month - timedelta(seconds=1)
+    _, last_day = calendar.monthrange(year, month)
+    month_end = datetime(year, month, last_day)
 
     # Встречи
     meetings = await meeting_repo.get_meeting_with_date(
@@ -49,23 +67,14 @@ async def calendar_view(
     )
 
     events_by_day = {}
+    events_by_day.update(group_events_by_day(
+        meetings, lambda m: m.date, "meeting"
+    ))
+    events_by_day.update(group_events_by_day(
+        tasks, lambda t: t.deadline, "task"
+    ))
 
-    for meeting in meetings:
-        day_key = meeting.date.date()
-        events_by_day.setdefault(day_key, []).append({
-            "title": meeting.description[:30],
-            "time": meeting.date.strftime("%H:%M"),
-            "type": "meeting",
-        })
-
-    for task in tasks:
-        day_key = task.deadline.date()
-        events_by_day.setdefault(day_key, []).append({
-            "title": task.description[:30],
-            "time": task.deadline.strftime("%H:%M"),
-            "type": "task",
-        })
-
+    # Создаём календарную сетку
     cal = calendar.Calendar(firstweekday=0)
     month_weeks = cal.monthdatescalendar(year, month)
 
@@ -73,44 +82,35 @@ async def calendar_view(
     for week in month_weeks:
         week_data = []
         for day in week:
-            day_events = (
-                events_by_day.get(day, []) if day.month == month else None
-            )
+            is_current_month = day.month == month
             week_data.append({
-                "date": day if day.month == month else None,
-                "events": day_events
+                "date": day if is_current_month else None,
+                "events": (
+                    events_by_day.get(day, []) if is_current_month else None
+                )
             })
         calendar_grid.append(week_data)
 
+    # Предстоящие события (на 7 дней вперёд)
+    upcoming_range_end = today + timedelta(days=7)
     upcoming_meetings = await meeting_repo.get_meeting_with_date(
-        session, today, today + timedelta(days=7), current_user.id
+        session, today, upcoming_range_end, current_user.id
     )
-
     upcoming_tasks = await task_repo.get_task_with_date(
-        session, current_user.id, today, today + timedelta(days=7)
+        session, current_user.id, today, upcoming_range_end
     )
 
     upcoming_by_day = {}
-
-    for meeting in upcoming_meetings:
-        day_key = meeting.date.date()
-        upcoming_by_day.setdefault(day_key, []).append({
-            "title": meeting.description[:30],
-            "time": meeting.date.strftime("%H:%M"),
-            "type": "meeting",
-        })
-
-    for task in upcoming_tasks:
-        day_key = task.deadline.date()
-        upcoming_by_day.setdefault(day_key, []).append({
-            "title": task.description[:30],
-            "time": task.deadline.strftime("%H:%M"),
-            "type": "task",
-        })
+    upcoming_by_day.update(group_events_by_day(
+        upcoming_meetings, lambda m: m.date, "meeting"
+    ))
+    upcoming_by_day.update(group_events_by_day(
+        upcoming_tasks, lambda t: t.deadline, "task"
+    ))
 
     upcoming_list = []
-    for i in range(7):
-        d = today + timedelta(days=i)
+    for offset in range(7):
+        d = today + timedelta(days=offset)
         upcoming_list.append({
             "date": d.strftime("%d.%m.%Y"),
             "events": upcoming_by_day.get(d, [])
@@ -125,7 +125,11 @@ async def calendar_view(
             "current_date": current_date,
             "today": today,
             "prev_month": (current_date - timedelta(days=1)).replace(day=1),
-            "next_month": (current_date + timedelta(days=31)).replace(day=1),
+            "next_month": (current_date + timedelta(
+                days=calendar.monthrange(
+                    current_date.year, current_date.month
+                )[1])
+            ).replace(day=1),
             "upcoming_events": upcoming_list,
         },
         user=current_user

@@ -16,12 +16,8 @@ class BaseRepository:
         self.model = model
 
     async def get(self, session: AsyncSession, id: int):
-        result = await session.execute(
-            select(self.model).where(
-                self.model.id == id
-            )
-        )
-        return result.scalars().first()
+        result = await session.get(self.model, id)
+        return result
 
     async def get_all(self, session: AsyncSession):
         result = await session.execute(
@@ -90,24 +86,16 @@ class UserRepository(BaseRepository):
 
         session.add(user)
         await session.commit()
-        await session.refresh(user)
         return user
 
     async def update_password(
         self, session: AsyncSession, user_id: int, new_password: str
     ):
-        user = await session.execute(
-            select(User)
-            .where(
-                User.id == user_id
-            )
-        )
-        user = user.scalars().first()
+        user = await self.get(session, user_id)
         if user:
             user.set_password(new_password)
             session.add(user)
             await session.commit()
-            await session.refresh(user)
             return user
         raise ValueError(
             "Такого пользователя не существует"
@@ -119,12 +107,7 @@ class TaskRepository(BaseRepository):
         super().__init__(model=Task)
 
     async def create_task(self, session: AsyncSession, task_data: dict):
-        performer = await session.execute(
-            select(User).where(
-                User.id == task_data["performer"]
-            )
-        )
-        performer = performer.scalars().first()
+        performer = await session.get(session, task_data["performer"])
         if not performer:
             raise ValueError("Такого исполнителя не существует")
         task = self.model(
@@ -133,21 +116,24 @@ class TaskRepository(BaseRepository):
             description=task_data["description"],
             deadline=task_data["deadline"]
         )
-        session.add(task)
         await session.commit()
-        await session.refresh(task)
-
         return task
 
     async def get_all_user_tasks(self, session: AsyncSession, user_id: int):
-        avg_assessment = func.avg(
-            Task.assessment
-        ).filter(
-            Task.assessment.is_not(None)
-        ).over().label("average_assessment")
+        avg_assessment_subq = (
+            select(
+                func.avg(Task.assessment)
+                .filter(Task.assessment.is_not(None))
+                .label("average_assessment")
+            )
+            .where((Task.creator == user_id) | (Task.performer == user_id))
+        ).scalar_subquery()
 
         stmt = (
-            select(Task, avg_assessment)
+            select(
+                Task,
+                avg_assessment_subq
+            )
             .options(
                 selectinload(Task.performer_user),
                 selectinload(Task.creator_user)
@@ -156,17 +142,21 @@ class TaskRepository(BaseRepository):
         )
 
         result = await session.execute(stmt)
-
         rows = result.all()
 
+        if not rows:
+            return {"tasks": [], "avg": None}
+
         tasks = [row[0] for row in rows]
-        average_assessment = (
-            round(rows[0][1], 2)if rows and rows[0][1] is not None else None
-        )
+        average_assessment = rows[0][1]
 
         return {
             "tasks": tasks,
-            "avg": average_assessment
+            "avg": (
+                float(average_assessment)
+                if average_assessment is not None
+                else None
+            )
         }
 
     async def get_task_with_date(
@@ -234,7 +224,7 @@ class TeamRepository(BaseRepository):
         super().__init__(Team)
 
     async def add(self, session: AsyncSession,
-                  name: str, members: Optional[int] = None):
+                  name: str, members: Optional[list[int]] = None):
         team = Team(name=name)
         session.add(team)
         await session.flush()
@@ -264,7 +254,7 @@ class TeamRepository(BaseRepository):
         result = await session.execute(
             select(Team)
             .options(
-                selectinload(Team.user_teams).selectinload(UserTeam.user)
+                selectinload(Team.users)
             )
             .where(Team.id == team_id)
         )
@@ -279,7 +269,6 @@ class TeamRepository(BaseRepository):
         )
         session.add(userteam)
         await session.commit()
-        await session.flush()
         return userteam
 
     async def delete_member(self, session: AsyncSession,
@@ -329,7 +318,7 @@ class MeetingRepository(BaseRepository):
     async def add(self, session: AsyncSession,
                   date: datetime.datetime,
                   description: str,
-                  creator_id: int, members: Optional[int] = None):
+                  creator_id: int, members: Optional[list[int]] = None):
         meeting = Meeting(
             description=description,
             date=date, creator_id=creator_id
@@ -365,7 +354,6 @@ class MeetingRepository(BaseRepository):
         )
         session.add(usermeeting)
         await session.commit()
-        await session.flush()
         return usermeeting
 
     async def delete_member(self, session: AsyncSession,

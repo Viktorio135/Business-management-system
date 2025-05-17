@@ -13,7 +13,7 @@ from .security import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from dependencies import get_user_repo
 
 
-router = APIRouter(prefix='/auth')
+router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 

@@ -13,7 +13,7 @@ from applications.auth.security import get_current_user, get_user_repo
 from utils import render_template
 
 
-router = APIRouter(prefix='/users')
+router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
 
@@ -62,7 +62,7 @@ async def profile_edit(
                     new_password
                 )
             else:
-                return HTTPException(
+                raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail='Неверный пароль'
                 )
@@ -71,7 +71,7 @@ async def profile_edit(
             status_code=status.HTTP_303_SEE_OTHER
         )
     except Exception as e:
-        return HTTPException(
+        raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
@@ -104,7 +104,7 @@ async def profile_delete(
         return response
 
     except Exception as e:
-        return HTTPException(
+        raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )

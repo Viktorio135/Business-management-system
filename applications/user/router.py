@@ -13,7 +13,7 @@ from applications.auth.security import get_current_user, get_user_repo
 from utils import render_template
 
 
-router = APIRouter()
+router = APIRouter(prefix='/users', tags=["User"])
 templates = Jinja2Templates(directory="templates")
 
 

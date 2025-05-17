@@ -11,7 +11,7 @@ from dependencies import get_team_repo, get_user_repo
 from utils import render_template
 
 
-router = APIRouter()
+router = APIRouter(prefix='/teams', tags=["Team"])
 templates = Jinja2Templates(directory="templates")
 
 get_current_user_dep = get_current_user()

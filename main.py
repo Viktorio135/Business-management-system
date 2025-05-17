@@ -96,12 +96,12 @@ async def http_exception_handler(
     )
 
 
-app.include_router(user_router,  prefix='/users', tags=["User"])
-app.include_router(auth_router, prefix='/auth', tags=["Auth"])
-app.include_router(task_router, prefix='/tasks', tags=["Task"])
-app.include_router(team_router, prefix='/teams', tags=["Team"])
-app.include_router(meeting_router, prefix='/meetings', tags=["Meeting"])
-app.include_router(calendar_router, prefix='/calendar', tags=["Calendar"])
-app.include_router(admin_router, prefix='/admin', tags=["Admin"])
+app.include_router(user_router)
+app.include_router(auth_router)
+app.include_router(task_router)
+app.include_router(team_router)
+app.include_router(meeting_router)
+app.include_router(calendar_router)
+app.include_router(admin_router)
 
 setup_admin(app, engine)

@@ -16,7 +16,7 @@ from applications.auth.security import get_current_user
 from utils import render_template
 
 
-router = APIRouter()
+router = APIRouter(prefix='/tasks', tags=["Task"])
 templates = Jinja2Templates(directory="templates")
 
 get_current_user_dep = get_current_user()

@@ -15,7 +15,7 @@ from utils import render_template
 from dependencies import get_meeting_repo, get_task_repo
 
 
-router = APIRouter()
+router = APIRouter(prefix='/calendar', tags=["Calendar"])
 templates = Jinja2Templates(directory="templates")
 
 get_current_user_dep = get_current_user()

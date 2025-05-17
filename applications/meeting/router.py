@@ -13,7 +13,7 @@ from dependencies import get_user_repo, get_meeting_repo
 from utils import render_template
 
 
-router = APIRouter()
+router = APIRouter(prefix='/meetings', tags=["Meeting"])
 templates = Jinja2Templates(directory="templates")
 
 get_current_user_dep = get_current_user()

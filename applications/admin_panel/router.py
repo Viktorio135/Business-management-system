@@ -20,7 +20,7 @@ SUPERADMIN_USERNAME = os.environ.get("SUPERADMIN_USERNAME")
 SUPERADMIN_PASSWORD = os.environ.get("SUPERADMIN_PASSWORD")
 
 
-router = APIRouter()
+router = APIRouter(prefix='/admin', tags=["Admin"])
 
 
 @router.post("/login")

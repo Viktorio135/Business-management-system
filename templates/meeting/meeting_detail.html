@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Встреча #{{ meeting.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Заголовок с редактированием -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center gap-2">
+            <h2>{{ meeting.description }}</h2>
+            {% if user.role == "admin" %}
+            <button type="button" 
+                    class="btn btn-sm btn-outline-secondary" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#editMeetingModal">
+                <i class="bi bi-pencil"></i> Редактировать
+            </button>
+            {% endif %}
+        </div>
+        <a href="{{ url_for('meeting_list_page') }}" class="btn btn-outline-secondary">← Назад</a>
+    </div>
+
+    <!-- Модальное окно редактирования -->
+    {% if user.role == "admin" %}
+    <div class="modal fade" id="editMeetingModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Редактировать встречу</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" action="{{ url_for('edit_meeting', meeting_id=meeting.id) }}">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Описание</label>
+                            <textarea class="form-control" 
+                                      name="description" 
+                                      rows="3"
+                                      required>{{ meeting.description }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дата и время</label>
+                            <input type="datetime-local" 
+                                  class="form-control" 
+                                  name="date" 
+                                  value="{{ meeting.date.strftime('%Y-%m-%dT%H:%M') }}" 
+                                  required>
+                        </div>
+                        {% if error %}
+                        <div class="alert alert-danger">{{ error }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Информация о встрече -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Детали встречи</h5>
+                    <dl class="row">
+                        <dt class="col-sm-4">Дата и время</dt>
+                        <dd class="col-sm-8">{{ meeting.date }}</dd>
+                        
+                        <dt class="col-sm-4">Организатор</dt>
+                        <dd class="col-sm-8">{{ meeting.creator.name }} {{ meeting.creator.lastname }}</dd>
+                        
+                        <dt class="col-sm-4">Участников</dt>
+                        <dd class="col-sm-8">{{ meeting.participants|length }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Управление участниками -->
+    {% if user.role == "admin" %}
+    <div class="card mb-4">
+        <div class="card-header">Управление участниками</div>
+        <div class="card-body">
+            <div class="row g-3">
+                <!-- Форма добавления -->
+                <div class="col-md-8">
+                    <form method="post" action="{{ url_for('add_meeting_member', meeting_id=meeting.id) }}">
+                        <div class="input-group">
+                            <select class="form-select" name="user_id" required>
+                                <option value="">Выберите участника</option>
+                                {% for user in available_users %}
+                                <option value="{{ user.id }}">
+                                    {{ user.name }} {{ user.lastname }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-primary">Добавить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Список участников -->
+    <h4 class="mb-3">Участники</h4>
+    <div class="list-group">
+        {% for participant in meeting.participants %}
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                {{ participant.user.name }} {{ participant.user.lastname }}
+                <span class="text-muted">({{ participant.user.email }})</span>
+            </div>
+            {% if user.role == "admin" %}
+            <div class="btn-group">
+                <form method="post" action="{{ url_for('delete_meeting_member', meeting_id=meeting.id) }}">
+                    <input type="hidden" name="user_id" value="{{ participant.user.id }}">
+                    <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">Нет участников</div>
+    {% endfor %}
+    </div>
+</div>
+
+<style>
+.meeting-info dt {
+    font-weight: 500;
+    color: #666;
+}
+.meeting-info dd {
+    margin-bottom: 0.5rem;
+}
+</style>
+{% endblock %}

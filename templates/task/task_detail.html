@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Задача #{{ task.id }}{% endblock %}
+
+{% block content %}
+{% set status_names = {
+    'open': 'Открыто',
+    'in_work': 'В работе',
+    'completed': 'Завершено'
+} %}
+<div class="container">
+    <div class="card my-4">
+        <div class="card-header">
+            <h2>Задача #{{ task.id }}</h2>
+            <div class="d-flex align-items-center gap-2 mt-2">
+                <span class="badge bg-{{ 'success' if task.status == 'completed' else 'warning' }}">
+                    {{ status_names[task.status] }}
+                </span>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                            type="button" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false">
+                        Изменить статус
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" 
+                            href="/tasks/{{ task.id }}/change_status?task_status=open">
+                            Открыто
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" 
+                            href="/tasks/{{ task.id }}/change_status?task_status=in_work">
+                            В работе
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" 
+                            href="/tasks/{{ task.id }}/change_status?task_status=completed">
+                            Завершено
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                {% if user.role in ['admin'] %}
+                {% if task.status == 'completed' %}
+                <div class="dropdown ms-3">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                            type="button" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false">
+                        {% if task.assessment %}
+                            Оценка: {{ task.assessment }}
+                        {% else %}
+                            Оценить
+                        {% endif %}
+                    </button>
+                    <ul class="dropdown-menu">
+                        {% for score in range(1, 6) %}
+                        <li>
+                            <a class="dropdown-item" 
+                            href="/tasks/{{ task.id }}/change_assessment?task_id={{ task.id }}&assessment={{ score }}">
+                                {{ score }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div> <!-- Закрываем card-header здесь -->
+        
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <h5>Создатель:</h5>
+                    <p>{{ task.creator_user.name }} {{ task.creator_user.lastname }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Исполнитель:</h5>
+                    <p>{{ task.performer_fullname }}</p>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <h5>Дата создания:</h5>
+                    <p>{{ task.created_at }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Срок выполнения:</h5>
+                    <p>{{ task.deadline }}</p>
+                </div>
+                {% if task.assessment %}
+                <div class="col-md-6">
+                    <h5>Оценка:</h5>
+                    <p>{{ task.assessment }}</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <h5>Подробное описание:</h5>
+            <div class="border p-3 mb-3">
+                {{ task.description }}
+            </div>
+            
+            {% if user.role in ['admin'] %}
+            <div class="btn-group">
+                <a href="/tasks/{{ task.id }}/edit" class="btn btn-warning">Редактировать</a>
+                <form method="post" action="/tasks/{{ task.id }}/delete">
+                    <button type="submit" class="btn btn-danger ms-2">Удалить</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card my-4">
+        <div class="card-header">
+            <h4>Комментарии к задаче</h4>
+        </div>
+        <div class="card-body">
+            <!-- Список комментариев -->
+            <div class="chat-messages mb-4" style="max-height: 400px; overflow-y: auto;">
+                {% for comment in task.created_tasks %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="fw-bold">
+                            {{ comment.user.name }} {{ comment.user.lastname }}
+                            {% if comment.user_id == task.creator_user_id %}
+                            <span class="badge bg-primary">Создатель</span>
+                            {% elif comment.user_id == task.performer_id %}
+                            <span class="badge bg-success">Исполнитель</span>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">{{ comment.created_at }}</small>
+                    </div>
+                    <div class="mt-1 p-2 bg-light rounded">
+                        {{ comment.text }}
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-muted">Пока нет комментариев</div>
+                {% endfor %}
+            </div>
+
+            <!-- Форма добавления комментария -->
+            {% if user.id in [task.creator_user_id, task.performer_id] %}
+            <form method="POST" action="{{ url_for('add_comment', task_id=task.id) }}">
+                <div class="mb-3">
+                    <textarea name="message" class="form-control" 
+                              rows="3" placeholder="Напишите комментарий..." 
+                              required></textarea>
+                </div>
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary">
+                        Отправить
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <div class="alert alert-info">
+                Только создатель и исполнитель могут оставлять комментарии
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
